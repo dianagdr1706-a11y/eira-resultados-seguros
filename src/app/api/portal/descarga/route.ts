@@ -41,12 +41,14 @@ export async function GET(req: Request) {
     audit({ tipo: "sistema" }, "INTEGRIDAD_FALLIDA: el PDF no coincide con su SHA-256", e.id);
     return denegado("El documento no pasó la verificación de integridad. EIRA fue notificada.", 409);
   }
-  if (e.estado !== "consultado") d.prepare("UPDATE estudios SET estado = 'consultado', consultado_en = ? WHERE id = ?").run(nowIso(), e.id);
+  const archivo = `documento_eira_${e.folio_muestra}`.normalize("NFKD").replace(/[^A-Za-z0-9._-]/g, "_");
+  if (e.estado !== "consultado")
+    d.prepare("UPDATE estudios SET estado = 'consultado', consultado_en = ?, requiere_asistida = 0 WHERE id = ?").run(nowIso(), e.id);
   if (primeraVez) audit({ tipo: "paciente", id: info.pid, nombre: "Paciente titular" }, "DESCARGA_PACIENTE (integridad SHA-256 verificada)", e.id, null, clientIp());
   return new NextResponse(buf, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="documento_eira_${e.folio_muestra}.pdf"`,
+      "Content-Disposition": `inline; filename="${archivo}.pdf"`,
       "Cache-Control": "no-store, private, max-age=0",
       Pragma: "no-cache",
       "X-Content-Type-Options": "nosniff",
