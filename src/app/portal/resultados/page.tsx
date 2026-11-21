@@ -4,6 +4,7 @@ import { db, type Estudio } from "@/lib/db";
 import { fmtDate } from "@/lib/estados";
 import { salirPortal } from "../actions";
 import Escuchar from "./Escuchar";
+import EnviarBriar from "./EnviarBriar";
 
 export default async function Resultados({ searchParams }: { searchParams: { error?: string } }) {
   const s = await getPaciente();
@@ -49,6 +50,7 @@ export default async function Resultados({ searchParams }: { searchParams: { err
                 <input type="hidden" name="estudio_id" value={e.id} />
                 <button className="btn-primary w-full py-3 text-lg">Ver documento</button>
               </form>
+              <EnviarBriar estudioId={e.id} />
               <p className="text-xs text-slate-500">El enlace dura 2 minutos y solo funciona con tu sesión; no se puede compartir.</p>
             </>
           )}

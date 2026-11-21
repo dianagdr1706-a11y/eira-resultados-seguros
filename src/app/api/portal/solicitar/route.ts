@@ -4,15 +4,16 @@ import { emitirTokenDescarga } from "@/core/reto4/portal";
 import { ErrorDominio } from "@/core/errores";
 
 export async function POST(req: Request) {
-  const base = new URL(req.url);
+  // Ubicación relativa: detrás de un proxy o túnel, req.url trae el host interno y el navegador no podría seguirla.
+  const ir = (ruta: string) => new NextResponse(null, { status: 303, headers: { Location: ruta } });
   const s = await getPaciente();
-  if (!s) return NextResponse.redirect(new URL("/portal?error=sesion", base), 303);
+  if (!s) return ir("/portal?error=sesion");
   const estudioId = String((await req.formData()).get("estudio_id") ?? "");
   try {
     const t = await emitirTokenDescarga({ pacienteId: s.paciente.id, sesion: s.token, estudioId });
-    return NextResponse.redirect(new URL(`/api/portal/descarga?t=${t}`, base), 303);
+    return ir(`/api/portal/descarga?t=${t}`);
   } catch (e) {
-    if (e instanceof ErrorDominio) return NextResponse.redirect(new URL("/portal/resultados?error=noautorizado", base), 303);
+    if (e instanceof ErrorDominio) return ir("/portal/resultados?error=noautorizado");
     throw e;
   }
 }
