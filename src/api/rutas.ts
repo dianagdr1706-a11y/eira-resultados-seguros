@@ -8,6 +8,8 @@ import * as r1 from "@/core/reto1/expediente";
 import * as sync from "@/core/reto1/sincronizacion";
 import * as r4 from "@/core/reto4/estudios";
 import * as portal from "@/core/reto4/portal";
+import * as llavero from "@/core/reto4/llavero";
+import * as contacto from "@/core/reto4/contacto";
 import * as bit from "@/core/bitacora";
 import * as sim from "@/sim/controles";
 import { db, type Usuario } from "@/lib/db";
@@ -80,6 +82,16 @@ export const RUTAS: Ruta[] = [
   { metodo: "POST", ruta: "/reto4/estudios/:id/notificacion", acceso: "personal", desc: "Reenvía el aviso neutro", fn: (p) => ok(r4.reenviarNotificacion(c(p), p.params.id)) },
   { metodo: "POST", ruta: "/reto4/estudios/:id/entrega", acceso: "personal", desc: "Entrega asistida {modalidad, resultado, identidad_verificada, acuse}", fn: (p) => ok(r4.registrarEntrega(c(p), { estudioId: p.params.id, modalidad: p.body.modalidad, resultado: p.body.resultado, identidadVerificada: !!p.body.identidad_verificada, acuse: p.body.acuse, observaciones: p.body.observaciones })) },
   { metodo: "POST", ruta: "/reto4/pacientes/:id/pin", acceso: "personal", desc: "Genera PIN de talón (se muestra una sola vez)", fn: (p) => { const r = r4.generarPinTalon(c(p), p.params.id); return ok({ id_eira: r.paciente.id_eira, pin: r.pin, expira: r.expira }, 201); } },
+
+  // ───────── Reto 4 · Llavero NFC y ciclo de contacto ─────────
+  { metodo: "POST", ruta: "/reto4/pacientes/:id/llavero", acceso: "personal", desc: "Emite llavero NFC: devuelve la ruta a grabar en la etiqueta", fn: (p) => ok(llavero.emitirLlavero(c(p), p.params.id), 201) },
+  { metodo: "GET", ruta: "/reto4/llavero/:token", acceso: "publico", desc: "Al acercar el llavero: estado sin datos personales", fn: async (p) => ok(await llavero.leerLlavero(p.params.token, p.ip)) },
+  { metodo: "POST", ruta: "/reto4/llavero/:token/acceso", acceso: "publico", desc: "Llavero + {fecha_nacimiento} abre sesión de la paciente", fn: async (p) => {
+    const r = await llavero.accederConLlavero({ token: p.params.token, fechaNacimiento: String(p.body.fecha_nacimiento ?? ""), ip: p.ip });
+    return { datos: { siguiente: "documentos" }, efecto: { abrirSesionPaciente: r.pacienteId } };
+  } },
+  { metodo: "POST", ruta: "/reto4/contacto/ciclo", acceso: "personal", desc: "Ejecuta el ciclo: escala al siguiente medio tras 72 h sin consulta", fn: (p) => ok(contacto.ejecutarCicloContacto(c(p))) },
+  { metodo: "GET", ruta: "/reto4/estudios/:id/contacto", acceso: "personal", desc: "Intentos de contacto de un estudio", fn: (p) => { r4.obtenerEstudio(c(p), p.params.id); return ok(contacto.intentosDe(p.params.id)); } },
 
   // ───────── Reto 4 · Portal de la paciente ─────────
   { metodo: "POST", ruta: "/reto4/portal/acceso", acceso: "publico", desc: "Paso 1 {folio, fecha_nacimiento, metodo, pin?}", fn: async (p) => {

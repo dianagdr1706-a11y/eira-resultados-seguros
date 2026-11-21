@@ -10,6 +10,7 @@ import { kv } from "@/lib/kv";
 import { resetDemo } from "@/sim/datos-demo";
 import * as sim from "@/sim/controles";
 import * as core from "@/core/reto4/estudios";
+import { ejecutarCicloContacto } from "@/core/reto4/contacto";
 import { ErrorDominio } from "@/core/errores";
 import type { Ctx } from "@/core/permisos";
 
@@ -117,6 +118,12 @@ export async function toggleProveedor(fd: FormData) {
   ejecutar(() => sim.cambiarProveedor(ctxDe(u), String(fd.get("canal")), String(fd.get("valor")) === "1"), "/staff");
   revalidatePath("/staff");
   redirect(String(fd.get("back") ?? "/staff"));
+}
+
+export async function correrCicloContacto() {
+  const u = await requireStaff(["eira_admin"]);
+  const r = ejecutar(() => ejecutarCicloContacto(ctxDe(u)), "/staff");
+  redirect(`/staff?ciclo=${encodeURIComponent(r.pasos.length ? r.pasos.map((p) => `${p.folio}: ${p.medio} ${p.estado}`).join(" · ") : "Sin casos que escalar (menos de 72 h o ya consultados)")}`);
 }
 
 export async function avanzarReloj(fd: FormData) {

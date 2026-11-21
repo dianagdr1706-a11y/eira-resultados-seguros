@@ -67,6 +67,7 @@ async function seed() {
       `INSERT INTO pacientes (id, id_eira, nombre, fecha_nacimiento, telefono, correo, canal_preferido, municipio, sede_ultima)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(id, p.id_eira, p.nombre, p.fecha_nacimiento, p.telefono, p.correo, p.canal_preferido, p.municipio, p.sede_ultima);
+    if (p.id_eira === "EIRA-00533") d.prepare("UPDATE pacientes SET telegram = '@lucia_demo' WHERE id = ?").run(id);
     pac.push(d.prepare("SELECT * FROM pacientes WHERE id = ?").get(id) as Paciente);
   }
   const sistema = { tipo: "sistema" as const, nombre: "Datos sintéticos de demo" };

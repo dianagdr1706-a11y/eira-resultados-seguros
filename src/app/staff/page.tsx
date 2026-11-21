@@ -4,11 +4,11 @@ import { listarEstudios, alertas } from "@/lib/consultas";
 import { ESTADOS, fmt } from "@/lib/estados";
 import { getSetting } from "@/lib/db";
 import { kv } from "@/lib/kv";
-import { avanzarReloj, reiniciarDemo, toggleProveedor } from "./actions";
+import { avanzarReloj, correrCicloContacto, reiniciarDemo, toggleProveedor } from "./actions";
 
 const ORDEN = ["cargado", "revision_admin", "pendiente_clinica", "devuelto", "notificado", "autorizado_acompanado", "consultado", "entregado_asistido"];
 
-export default async function Panel({ searchParams }: { searchParams: { estado?: string; error?: string; ok?: string } }) {
+export default async function Panel({ searchParams }: { searchParams: { estado?: string; error?: string; ok?: string; ciclo?: string } }) {
   const u = await requireStaff();
   const todos = listarEstudios();
   const visibles = u.rol === "laboratorio" ? todos.filter((e) => e.estado === "cargado") : todos;
@@ -27,6 +27,7 @@ export default async function Panel({ searchParams }: { searchParams: { estado?:
   return (
     <div className="space-y-6">
       {searchParams.error === "permiso" && <p className="rounded bg-red-50 p-3 text-sm text-red-700">Tu rol no tiene permiso para esa acción.</p>}
+      {searchParams.ciclo && <p className="rounded bg-violet-50 p-3 text-sm text-violet-900"><b>Ciclo de contacto:</b> {searchParams.ciclo}</p>}
       {searchParams.ok === "cargado" && <p className="rounded bg-emerald-50 p-3 text-sm text-emerald-700">PDF cargado. EIRA hará la asociación y la revisión.</p>}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="h1">Panel de estados</h1>
@@ -109,6 +110,12 @@ export default async function Panel({ searchParams }: { searchParams: { estado?:
               <button className={caidoCorreo ? "btn-danger" : "btn-secondary"}>{caidoCorreo ? "CAÍDO: restablecer" : "Simular caída"}</button>
             </form>
           </div>
+          {u.rol === "eira_admin" && (
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span>Ciclo de contacto (72 h sin consulta → siguiente medio: Telegram, SMS, correo, malla Bluetooth, persona):</span>
+              <form action={correrCicloContacto}><button className="btn-primary py-1">Ejecutar ciclo ahora</button></form>
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span>Reloj de demo:</span>
             {[1, 3, 7].map((d) => (

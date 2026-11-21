@@ -26,6 +26,8 @@ export const PERMISOS = {
   "reto4.reenviarNotificacion": ["eira_admin"],
   "reto4.registrarEntrega": ["eira_admin", "medico"],
   "reto4.generarPinTalon": ["eira_admin"],
+  "reto4.emitirLlavero": ["eira_admin", "captura"],
+  "reto4.ejecutarCicloContacto": ["eira_admin"],
   "reto4.listarPanel": ["laboratorio", "eira_admin", "medico", "auditoria"],
   "reto4.obtenerEstudio": ["eira_admin", "medico", "auditoria"],
   // Transversal

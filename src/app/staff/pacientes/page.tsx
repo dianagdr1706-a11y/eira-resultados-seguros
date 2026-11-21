@@ -27,10 +27,13 @@ export default async function Pacientes() {
                 <td>{p.canal_preferido === "asistido" ? <span className="badge bg-rose-200 text-rose-900">asistido</span> : p.canal_preferido}</td>
                 <td>
                   {u.rol === "eira_admin" ? (
+                    <div className="flex flex-wrap gap-1">
+                    <Link className="btn-secondary py-1 text-xs" href={`/staff/pacientes/${p.id}/llavero`}>Llavero NFC</Link>
                     <form action={generarPin}>
                       <input type="hidden" name="paciente_id" value={p.id} />
                       <button className="btn-secondary py-1 text-xs">{p.pin_hash ? "Regenerar talón" : "Generar talón"}</button>
                     </form>
+                    </div>
                   ) : p.pin_hash ? "Activo" : "—"}
                 </td>
               </tr>

@@ -15,14 +15,14 @@ export async function estadoSimulacion(ctx: Ctx) {
   exigir(ctx, "sim.controles");
   return {
     reloj: { ahora: nowIso(), dias_adelantados: offsetDays() },
-    proveedores: { sms: proveedorCaido("sms") ? "caido" : "ok", correo: proveedorCaido("correo") ? "caido" : "ok" },
+    proveedores: Object.fromEntries((["telegram", "sms", "correo", "malla"] as Canal[]).map((c) => [c, proveedorCaido(c) ? "caido" : "ok"])),
     almacen_sesiones: (await kv()).backend,
   };
 }
 
 export function cambiarProveedor(ctx: Ctx, canal: string, caido: boolean) {
   exigir(ctx, "sim.controles");
-  if (canal !== "sms" && canal !== "correo") throw new ErrorDominio("CANAL_INVALIDO", "Canal debe ser sms o correo");
+  if (!["sms", "correo", "telegram", "malla"].includes(canal)) throw new ErrorDominio("CANAL_INVALIDO", "Canal debe ser sms, correo, telegram o malla");
   simularCaida(canal as Canal, caido);
   audit(actorDe(ctx), caido ? `SIMULACION_CAIDA_PROVEEDOR_${canal.toUpperCase()}` : `PROVEEDOR_${canal.toUpperCase()}_RESTABLECIDO`, null);
 }

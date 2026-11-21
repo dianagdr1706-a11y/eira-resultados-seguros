@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS pacientes (
   id TEXT PRIMARY KEY, id_eira TEXT UNIQUE NOT NULL, nombre TEXT NOT NULL, fecha_nacimiento TEXT NOT NULL,
   telefono TEXT, correo TEXT, canal_preferido TEXT NOT NULL DEFAULT 'sms', municipio TEXT, sede_ultima TEXT,
   pin_hash TEXT, pin_expira TEXT, tercero_autorizado TEXT,
-  curp TEXT, version INTEGER NOT NULL DEFAULT 1, creado_en TEXT, actualizado_en TEXT
+  telegram TEXT, curp TEXT, version INTEGER NOT NULL DEFAULT 1, creado_en TEXT, actualizado_en TEXT
 );
 CREATE TABLE IF NOT EXISTS visitas (
   id TEXT PRIMARY KEY, paciente_id TEXT NOT NULL REFERENCES pacientes(id), fecha TEXT NOT NULL,
@@ -30,6 +30,14 @@ CREATE TABLE IF NOT EXISTS servicios (
 CREATE TABLE IF NOT EXISTS decisiones_coincidencia (
   id INTEGER PRIMARY KEY AUTOINCREMENT, datos_capturados TEXT NOT NULL, candidatos TEXT NOT NULL,
   decision TEXT NOT NULL, paciente_id TEXT, motivo TEXT, usuario_id TEXT NOT NULL, creado_en TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS llaveros (
+  id TEXT PRIMARY KEY, paciente_id TEXT NOT NULL REFERENCES pacientes(id), token_hash TEXT UNIQUE NOT NULL,
+  activo INTEGER NOT NULL DEFAULT 1, emitido_por TEXT, creado_en TEXT NOT NULL, ultimo_uso TEXT
+);
+CREATE TABLE IF NOT EXISTS intentos_contacto (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, estudio_id TEXT NOT NULL REFERENCES estudios(id), canal TEXT NOT NULL,
+  estado TEXT NOT NULL, detalle TEXT, creado_en TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS sync_ops (
   op_id TEXT PRIMARY KEY, dispositivo TEXT NOT NULL, tipo TEXT NOT NULL, datos TEXT NOT NULL,
@@ -78,7 +86,7 @@ export function db(): Database.Database {
   d.pragma("foreign_keys = ON");
   d.exec(SCHEMA);
   const cols = (d.prepare("PRAGMA table_info(pacientes)").all() as { name: string }[]).map((c) => c.name);
-  for (const [c, def] of [["curp", "TEXT"], ["version", "INTEGER NOT NULL DEFAULT 1"], ["creado_en", "TEXT"], ["actualizado_en", "TEXT"]])
+  for (const [c, def] of [["telegram", "TEXT"], ["curp", "TEXT"], ["version", "INTEGER NOT NULL DEFAULT 1"], ["creado_en", "TEXT"], ["actualizado_en", "TEXT"]])
     if (!cols.includes(c)) d.exec(`ALTER TABLE pacientes ADD COLUMN ${c} ${def}`);
   g.__db = d;
   return d;
@@ -97,7 +105,7 @@ export type Paciente = {
   id: string; id_eira: string; nombre: string; fecha_nacimiento: string; telefono: string | null;
   correo: string | null; canal_preferido: string; municipio: string | null; sede_ultima: string | null;
   pin_hash: string | null; pin_expira: string | null; tercero_autorizado: string | null;
-  curp: string | null; version: number; creado_en: string | null; actualizado_en: string | null;
+  telegram: string | null; curp: string | null; version: number; creado_en: string | null; actualizado_en: string | null;
 };
 
 export type Visita = {

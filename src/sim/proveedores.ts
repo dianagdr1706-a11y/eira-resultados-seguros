@@ -5,7 +5,8 @@
  */
 import { getSetting, setSetting } from "@/lib/db";
 
-export type Canal = "sms" | "correo";
+/** telegram = mensajería por internet · malla = Bluetooth/Wi-Fi local (Bridgefy, Briar o Nearby) llevada por una "mula" de datos. */
+export type Canal = "sms" | "correo" | "telegram" | "malla";
 
 export function proveedorCaido(canal: Canal) {
   return getSetting(`fallo_${canal}`) === "1";
