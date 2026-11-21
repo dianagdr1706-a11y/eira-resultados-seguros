@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getStaff } from "@/lib/auth";
 import { ROLES } from "@/lib/estados";
 import { logoutStaff } from "./actions";
-import { offsetDays } from "@/lib/clock";
+import { offsetDays } from "@/sim/reloj";
 
 export default async function StaffLayout({ children }: { children: React.ReactNode }) {
   const u = await getStaff();

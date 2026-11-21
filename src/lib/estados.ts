@@ -15,6 +15,7 @@ export const ROLES: Record<string, string> = {
   eira_admin: "Administración EIRA",
   medico: "Médico / Clínico",
   auditoria: "Auditoría",
+  captura: "Captura en jornada",
 };
 
 export const MODALIDADES: Record<string, string> = {

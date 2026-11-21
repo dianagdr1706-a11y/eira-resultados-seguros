@@ -1,4 +1,4 @@
-import { getSetting, setSetting } from "./db";
+import { getSetting, setSetting } from "@/lib/db";
 
 const DAY = 24 * 60 * 60 * 1000;
 

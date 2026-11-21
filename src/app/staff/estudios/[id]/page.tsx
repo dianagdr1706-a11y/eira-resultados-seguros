@@ -10,6 +10,12 @@ import { asociarPaciente, autorizacionClinica, registrarEntrega, reintentarNotif
 import BethesdaSelector from "./BethesdaSelector";
 
 const ERR: Record<string, string> = {
+  VERIFICACION_INCOMPLETA: "Selecciona una paciente y confirma los 4 puntos de verificación.",
+  MOTIVO_REQUERIDO: "Escribe el motivo de la devolución.",
+  BETHESDA_REQUERIDA: "Selecciona la categoría Bethesda.",
+  ACUSE_REQUERIDO: "Para registrar la entrega confirma la identidad y escribe el folio de acuse o el nombre de quien firma.",
+  ESTADO_INVALIDO: "El estudio ya cambió de estado. Revisa la línea de tiempo.",
+  SIN_PERMISO: "Tu rol no puede hacer esta acción.",
   verificacion: "Selecciona una paciente y confirma los 4 puntos de verificación.",
   motivo: "Escribe el motivo de la devolución.",
   bethesda: "Selecciona la categoría Bethesda.",

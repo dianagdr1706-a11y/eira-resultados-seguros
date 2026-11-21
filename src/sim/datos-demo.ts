@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { DATA_DIR, UPLOAD_DIR, db, getSetting, setSetting, type Paciente } from "./db";
-import { hashSecret, newId, sha256 } from "./ids";
-import { audit } from "./audit";
-import { samplePdf } from "./pdf";
+import { DATA_DIR, UPLOAD_DIR, db, getSetting, setSetting, type Paciente } from "@/lib/db";
+import { hashSecret, newId, sha256 } from "@/lib/ids";
+import { audit } from "@/lib/audit";
+import { samplePdf } from "@/sim/pdf-muestra";
 
 const DAY = 86400000;
 const ago = (d: number) => new Date(Date.now() - d * DAY).toISOString();
@@ -21,14 +21,26 @@ export const USUARIOS_DEMO = [
   { usuario: "admin", nombre: "Carmen Ruiz (EIRA)", rol: "eira_admin", cedula: null },
   { usuario: "medico", nombre: "Dra. Patricia Vázquez", rol: "medico", cedula: "12345678" },
   { usuario: "auditoria", nombre: "Auditoría EIRA", rol: "auditoria", cedula: null },
+  { usuario: "captura", nombre: "Brigadista de jornada (captura)", rol: "captura", cedula: null },
 ];
 
 export const DEMO_PASSWORD = "demo";
 
 let seeding: Promise<void> | null = null;
+let usuariosAlDia = false;
 
 export function ensureSeeded() {
-  if (getSetting("seeded") === "1") return Promise.resolve();
+  if (getSetting("seeded") === "1") {
+    if (!usuariosAlDia) {
+      // Bases sembradas antes de agregar un rol nuevo: crea las cuentas demo que falten.
+      for (const u of USUARIOS_DEMO)
+        if (!db().prepare("SELECT 1 FROM usuarios WHERE usuario = ?").get(u.usuario))
+          db().prepare("INSERT INTO usuarios (id, nombre, usuario, password_hash, rol, cedula) VALUES (?, ?, ?, ?, ?, ?)")
+            .run(newId("USR"), u.nombre, u.usuario, hashSecret(DEMO_PASSWORD), u.rol, u.cedula);
+      usuariosAlDia = true;
+    }
+    return Promise.resolve();
+  }
   if (!seeding)
     seeding = seed()
       .catch((err) => {
@@ -66,6 +78,7 @@ async function seed() {
       `INSERT INTO pacientes (id, id_eira, nombre, fecha_nacimiento, telefono, correo, canal_preferido, municipio, sede_ultima)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(id, p.id_eira, p.nombre, p.fecha_nacimiento, p.telefono, p.correo, p.canal_preferido, p.municipio, p.sede_ultima);
+    if (p.id_eira === "EIRA-00533") d.prepare("UPDATE pacientes SET telegram = '@lucia_demo' WHERE id = ?").run(id);
     pac.push(d.prepare("SELECT * FROM pacientes WHERE id = ?").get(id) as Paciente);
   }
   const sistema = { tipo: "sistema" as const, nombre: "Datos sintéticos de demo" };

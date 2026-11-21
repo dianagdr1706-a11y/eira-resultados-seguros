@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { bethesdaLabel } from "./bethesda";
+import { bethesdaLabel } from "@/lib/bethesda";
 
 export type SampleInput = {
   nombre: string; fecha_nacimiento: string; id_eira: string; folio: string; fecha_toma: string; bethesda?: string;

@@ -1,6 +1,7 @@
-import { db, getSetting, type Paciente } from "./db";
+import { db, type Paciente } from "./db";
+import { entregar, proveedorCaido } from "@/sim/proveedores";
 import { maskEmail, maskPhone } from "./ids";
-import { nowIso } from "./clock";
+import { nowIso } from "@/sim/reloj";
 
 export const PORTAL_URL = process.env.PORTAL_URL ?? "https://resultados.eira.org/portal";
 const TEL = "341 410 8111";
@@ -44,9 +45,7 @@ function plantilla(tipo: Tipo, canal: "sms" | "correo", extra?: { codigo?: strin
   }
 }
 
-export function proveedorCaido(canal: "sms" | "correo") {
-  return getSetting(`fallo_${canal}`) === "1";
-}
+export { proveedorCaido };
 
 export type ResultadoEnvio = { canal: "sms" | "correo"; destino: string } | null;
 
@@ -62,12 +61,9 @@ export function enviarNeutro(p: Paciente, tipo: Tipo, estudioId: string | null, 
     const { asunto, mensaje } = plantilla(tipo, canal, extra);
     if (tipo !== "otp" && !esNeutro(`${asunto ?? ""} ${mensaje}`)) throw new Error("Mensaje con términos clínicos bloqueado");
     const masked = canal === "sms" ? maskPhone(destino) : maskEmail(destino);
-    if (proveedorCaido(canal)) {
-      ins.run(estudioId, p.id, canal, masked, asunto, mensaje, "fallido", tipo, nowIso());
-      continue;
-    }
-    ins.run(estudioId, p.id, canal, masked, asunto, mensaje, "simulado", tipo, nowIso());
-    return { canal, destino: masked };
+    const envio = entregar(canal);
+    ins.run(estudioId, p.id, canal, masked, asunto, mensaje, envio.estado, tipo, nowIso());
+    if (envio.ok) return { canal, destino: masked };
   }
   return null;
 }
