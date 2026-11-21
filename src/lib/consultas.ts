@@ -16,7 +16,7 @@ export function alertas(rows: EstudioRow[]): Alerta[] {
   const out: Alerta[] = [];
   for (const e of rows) {
     if (e.cerrado_en || e.estado === "consultado") continue;
-    if (e.requiere_asistida && ["autorizado_digital", "autorizado_acompanado"].includes(e.estado))
+    if (e.requiere_asistida && ["autorizado_digital", "autorizado_acompanado", "notificado"].includes(e.estado))
       out.push({ estudio: e, tipo: "asistida", texto: "Sin canal digital o falló el envío: requiere entrega asistida" });
     if (e.estado === "autorizado_acompanado") {
       const dias = daysSince(e.autorizado_en);
