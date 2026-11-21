@@ -16,6 +16,7 @@ export default async function StaffLayout({ children }: { children: React.ReactN
             {["laboratorio", "eira_admin"].includes(u.rol) && <Link className="rounded px-3 py-1.5 hover:bg-rose-50" href="/staff/cargar">Cargar PDF</Link>}
             {u.rol !== "laboratorio" && <Link className="rounded px-3 py-1.5 hover:bg-rose-50" href="/staff/pacientes">Pacientes</Link>}
             {u.rol !== "laboratorio" && <Link className="rounded px-3 py-1.5 hover:bg-rose-50" href="/staff/bandeja">Bandeja SMS/Correo</Link>}
+            {u.rol === "eira_admin" && <Link className="rounded px-3 py-1.5 hover:bg-rose-50" href="/staff/malla">Malla sin internet</Link>}
             {["eira_admin", "auditoria"].includes(u.rol) && <Link className="rounded px-3 py-1.5 hover:bg-rose-50" href="/staff/bitacora">Bitácora</Link>}
           </div>
           <div className="flex items-center gap-3 text-sm">

@@ -10,6 +10,7 @@ import { kv } from "@/lib/kv";
 import { resetDemo } from "@/sim/datos-demo";
 import * as sim from "@/sim/controles";
 import * as core from "@/core/reto4/estudios";
+import { confirmarEntregaMalla, registrarAcuseMalla } from "@/core/reto4/malla";
 import { ejecutarCicloContacto } from "@/core/reto4/contacto";
 import { ErrorDominio } from "@/core/errores";
 import type { Ctx } from "@/core/permisos";
@@ -137,4 +138,22 @@ export async function reiniciarDemo() {
   await resetDemo();
   await destroyStaffSession();
   redirect("/staff/login?ok=reinicio");
+}
+
+export async function entregaMalla(fd: FormData) {
+  const u = await requireStaff(["eira_admin"]);
+  ejecutar(() => confirmarEntregaMalla(ctxDe(u), { intentoId: Number(fd.get("intento_id")), portador: String(fd.get("portador") ?? ""), app: String(fd.get("app") ?? "") }), "/staff/malla");
+  revalidatePath("/staff/malla");
+  redirect("/staff/malla?ok=1");
+}
+
+export async function acuseMalla(fd: FormData) {
+  const u = await requireStaff(["eira_admin"]);
+  const r = ejecutar(() => registrarAcuseMalla(ctxDe(u), { texto: String(fd.get("texto") ?? ""), portador: String(fd.get("portador") ?? "") }), "/staff/malla");
+  revalidatePath("/staff/malla");
+  redirect(`/staff/malla?acuse=${encodeURIComponent([
+    `${r.confirmados.length} entrega(s) registrada(s)${r.confirmados.length ? `: ${r.confirmados.join(", ")}` : ""}`,
+    r.ya_registrados.length ? `ya estaban registradas: ${r.ya_registrados.join(", ")}` : "",
+    r.desconocidas.length ? `claves que no existen: ${r.desconocidas.join(", ")}` : "",
+  ].filter(Boolean).join(" · "))}`);
 }

@@ -83,6 +83,11 @@ Android y iPhone.
 4. Con 3 celulares en línea (A–B–C), A y C fuera de alcance entre sí: el mensaje salta por B.
 5. Úsala para avisos generales ("hoy hay entrega de resultados en la plaza"); para avisos individuales prefiere Briar.
 
+### Pantalla "Malla sin internet" (`/staff/malla`, administración)
+Lista los avisos que el ciclo de contacto mandó al medio `malla`. Cada uno trae el aviso neutro con una referencia opaca (sin nombre, folio ni diagnóstico), un botón para copiarlo a Briar/Bridgefy y un QR para pasarlo de celular a celular sin internet. Al volver, se registra quién lo llevó y con qué app ("Entregado por mula"); queda en la bitácora como `MALLA_ENTREGA_CONFIRMADA`. API: `GET /api/v1/reto4/malla` y `POST /api/v1/reto4/malla/:id/entrega`. La plataforma no transmite por Bluetooth: ese salto lo hace la app de malla.
+
+**Ruta por Briar, ida y regreso.** En la misma pantalla, "Ruta por Briar" junta en un solo mensaje los avisos pendientes de cada punto comunitario (ID EIRA y clave opaca; sin nombres, folios de muestra ni términos clínicos) para mandarlo a la promotora. Ella contesta en Briar `RECIBIDO <clave>`; al volver se pega su respuesta y solo esas claves quedan como entregadas (las desconocidas o repetidas se reportan). API: `GET /api/v1/reto4/malla/rutas` y `POST /api/v1/reto4/malla/acuse`. Copiar y pegar entre Briar y la plataforma lo hace una persona.
+
 ### Siguiente paso técnico (no está en el prototipo)
 Google **Nearby Connections** (Android) / Apple **Multipeer**: app propia del voluntario que descarga la cola de avisos en la oficina y la entrega al llegar al punto comunitario. El back ya está listo para eso: el medio `malla` del ciclo y la sincronización offline idempotente del Reto 1 (`POST /api/v1/reto1/sync`).
 

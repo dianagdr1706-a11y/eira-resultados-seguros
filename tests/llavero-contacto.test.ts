@@ -110,3 +110,41 @@ test("ciclo de contacto: una paciente que ya consultó no recibe más avisos; so
   const msgs = t.db().prepare("SELECT mensaje FROM notificaciones WHERE tipo = 'seguimiento'").all() as { mensaje: string }[];
   assert.ok(msgs.length > 0 && msgs.every((m) => esNeutro(m.mensaje)));
 });
+
+test("malla: el aviso es neutro y opaco, y la entrega por mula se registra una sola vez", async () => {
+  const ml = await import("@/core/reto4/malla");
+  const { esNeutro } = await import("@/lib/notify");
+  const avisos = ml.listarAvisosMalla(t.admin);
+  assert.ok(avisos.length > 0);
+  const a = avisos[0];
+  assert.ok(esNeutro(a.mensaje));
+  assert.ok(!a.mensaje.includes(a.folio) && !a.mensaje.includes(a.id_eira), "sin folio ni ID de paciente");
+  assert.equal(a.entrega, null);
+  assert.equal(await codigo(() => ml.listarAvisosMalla(t.medico)), "SIN_PERMISO");
+  assert.equal(await codigo(() => ml.confirmarEntregaMalla(t.admin, { intentoId: a.intento_id, portador: "", app: "briar" })), "DATOS_INCOMPLETOS");
+  assert.equal(await codigo(() => ml.confirmarEntregaMalla(t.admin, { intentoId: 999999, portador: "Marta Ruiz", app: "briar" })), "NO_ENCONTRADO");
+  ml.confirmarEntregaMalla(t.admin, { intentoId: a.intento_id, portador: "Marta Ruiz", app: "briar" });
+  assert.equal(await codigo(() => ml.confirmarEntregaMalla(t.admin, { intentoId: a.intento_id, portador: "Marta Ruiz", app: "briar" })), "YA_ENTREGADO");
+  assert.deepEqual(ml.listarAvisosMalla(t.admin).find((x) => x.intento_id === a.intento_id)?.entrega?.portador, "Marta Ruiz");
+});
+
+test("malla: ruta por Briar agrupa los pendientes y el acuse de regreso registra solo las claves recibidas", async () => {
+  const ml = await import("@/core/reto4/malla");
+  const { esNeutro } = await import("@/lib/notify");
+  const pendientes = ml.listarAvisosMalla(t.admin).filter((a) => !a.entrega && !a.consultado);
+  assert.ok(pendientes.length > 0);
+  const rutas = ml.rutasMalla(t.admin);
+  assert.equal(rutas.reduce((n, r) => n + r.avisos.length, 0), pendientes.length);
+  const a = pendientes[0];
+  const ruta = rutas.find((r) => r.avisos.some((x) => x.ref === a.ref))!;
+  assert.ok(esNeutro(ruta.mensaje) && ruta.mensaje.includes(a.ref) && !ruta.mensaje.includes(a.folio), "sin folio de muestra ni términos clínicos");
+  assert.equal(await codigo(() => ml.registrarAcuseMalla(t.admin, { texto: "ya avisé a todas", portador: "Marta Ruiz" })), "SIN_CLAVES");
+  assert.equal(await codigo(() => ml.registrarAcuseMalla(t.medico, { texto: `RECIBIDO ${a.ref}`, portador: "Marta Ruiz" })), "SIN_PERMISO");
+  assert.equal(await codigo(() => ml.registrarAcuseMalla(t.admin, { texto: `No recibido ${a.ref}`, portador: "Marta Ruiz" })), "SIN_CLAVES");
+  assert.equal(await codigo(() => ml.registrarAcuseMalla(t.admin, { texto: `RECIBIDO ${a.ref}9`, portador: "Marta Ruiz" })), "SIN_CLAVES", "clave más larga no cuenta");
+  assert.equal(await codigo(() => ml.registrarAcuseMalla(t.admin, { texto: ruta.mensaje, portador: "Marta Ruiz" })), "SIN_CLAVES", "citar la ruta no confirma nada");
+  const r = ml.registrarAcuseMalla(t.admin, { texto: `Hola, recibido ${a.ref.toLowerCase()} y FFFFFFFF`, portador: "Marta Ruiz" });
+  assert.deepEqual(r, { confirmados: [a.ref], ya_registrados: [], desconocidas: ["FFFFFFFF"] });
+  assert.deepEqual(ml.registrarAcuseMalla(t.admin, { texto: `RECIBIDO ${a.ref}`, portador: "Marta Ruiz" }).ya_registrados, [a.ref]);
+  assert.ok(!ml.rutasMalla(t.admin).some((x) => x.avisos.some((y) => y.ref === a.ref)), "lo entregado sale de la ruta");
+});
