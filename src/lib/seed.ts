@@ -29,7 +29,13 @@ let seeding: Promise<void> | null = null;
 
 export function ensureSeeded() {
   if (getSetting("seeded") === "1") return Promise.resolve();
-  if (!seeding) seeding = seed().finally(() => (seeding = null));
+  if (!seeding)
+    seeding = seed()
+      .catch((err) => {
+        wipeData();
+        throw err;
+      })
+      .finally(() => (seeding = null));
   return seeding;
 }
 
@@ -88,12 +94,16 @@ async function seed() {
   setSetting("seeded", "1");
 }
 
-export async function resetDemo() {
+function wipeData() {
   const g = globalThis as unknown as { __db?: { close(): void } };
   g.__db?.close();
   g.__db = undefined;
   for (const f of ["eira.db", "eira.db-wal", "eira.db-shm"]) fs.rmSync(path.join(DATA_DIR, f), { force: true });
   fs.rmSync(UPLOAD_DIR, { recursive: true, force: true });
+}
+
+export async function resetDemo() {
+  wipeData();
   db();
   await ensureSeeded();
 }
