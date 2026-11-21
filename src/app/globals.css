@@ -2,27 +2,242 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------------------
+   PaDi / EIRA design tokens (reference: PaDi UI)
+--------------------------------------------------------------------------- */
+:root {
+  --pink: #f693a7;
+  --mag: #d24c7f;
+  --berry: #b8185a;
+  --rose: #b13e5d;
+  --peach: #fdd7c7;
+  --blush: #fff1f3;
+  --pale: #ffd7de;
+  --ink: #1a1a1a;
+  --plum: #4a1d3d;
+  --muted: #6b5457;
+  --line: #f0eaea;
+  --coral: #ff7b9c;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --sh: 0 1px 2px rgba(74, 29, 61, 0.05), 0 14px 34px -18px rgba(74, 29, 61, 0.28);
+  --sh2: 0 2px 4px rgba(74, 29, 61, 0.06), 0 30px 60px -24px rgba(184, 24, 90, 0.38);
+  --foreground: var(--ink);
+  --background: #fffafb;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  @apply bg-rose-50/40 text-slate-800;
+  color: var(--ink);
+  background: var(--background);
+  font-family: var(--font-poppins), "Poppins", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-@layer components {
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition disabled:opacity-50; }
-  .btn-primary { @apply btn bg-rose-600 text-white hover:bg-rose-700; }
-  .btn-secondary { @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50; }
-  .btn-danger { @apply btn bg-amber-600 text-white hover:bg-amber-700; }
-  .card { @apply rounded-xl border border-slate-200 bg-white p-5 shadow-sm; }
-  .input { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200; }
-  .label { @apply mb-1 block text-sm font-medium text-slate-700; }
-  .badge { @apply inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold; }
-  .h1 { @apply text-2xl font-bold text-slate-900; }
-  .h2 { @apply text-lg font-semibold text-slate-900; }
-  .tbl { @apply w-full text-left text-sm; }
-  .tbl th { @apply border-b border-slate-200 px-3 py-2 font-semibold text-slate-600; }
-  .tbl td { @apply border-b border-slate-100 px-3 py-2 align-top; }
+:focus-visible {
+  outline: 3px solid var(--plum);
+  outline-offset: 3px;
+  border-radius: 10px;
 }
 
-@media print {
-  .no-print { display: none !important; }
-  body { background: white; }
+::selection {
+  background: var(--pale);
+  color: var(--plum);
+}
+
+/* Headings: heavy, tight tracking like the reference */
+main h1 {
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+}
+main h2 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Muted body copy uses the warm reference grey instead of cool slate */
+main .text-slate-500,
+main .text-slate-600 {
+  color: var(--muted);
+}
+
+/* Cards: white, warm hairline border, soft plum shadow, pink border on hover */
+main .bg-white.border,
+main .bg-white.rounded-3xl,
+main .bg-white.rounded-2xl {
+  border-color: var(--line);
+}
+main section.bg-white,
+main .rounded-3xl.bg-white {
+  box-shadow: var(--sh);
+  transition: box-shadow 0.5s var(--ease), border-color 0.4s var(--ease);
+}
+main section.bg-white:hover,
+main .rounded-3xl.bg-white:hover {
+  box-shadow: var(--sh2);
+}
+
+/* Inputs: thick warm border, pink focus glow (as .field in the reference) */
+main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+main select,
+main textarea {
+  border-width: 2px;
+  border-color: var(--line);
+  transition: border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+main input:not([type="checkbox"]):not([type="radio"]):focus,
+main select:focus,
+main textarea:focus {
+  border-color: var(--pink);
+  box-shadow: 0 14px 28px -16px rgba(184, 24, 90, 0.5);
+  outline: none;
+}
+main input[type="checkbox"],
+main input[type="radio"] {
+  accent-color: var(--berry);
+}
+
+/* Buttons: pill shape + gentle lift (reference .btn / .pill) */
+main button.bg-eira-600,
+main a.bg-eira-600,
+main button.bg-eira-700,
+header button.bg-eira-600 {
+  border-radius: 999px;
+  box-shadow: 0 14px 28px -14px rgba(184, 24, 90, 0.8);
+  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), background-color 0.25s;
+}
+main button.bg-eira-600:hover:not(:disabled),
+main a.bg-eira-600:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 34px -14px rgba(184, 24, 90, 0.85);
+}
+main button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.font-mono,
+code {
+  font-family: var(--font-mono), "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* ---------------------------------------------------------------------------
+   Background ribbons (reference #ribbons)
+--------------------------------------------------------------------------- */
+.padi-ribbons {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.padi-ribbons svg {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.55;
+}
+.padi-ribbons .r {
+  fill: none;
+  stroke: #f9c9d3;
+  stroke-linecap: round;
+}
+.padi-ribbons .echo {
+  fill: none;
+  stroke: var(--berry);
+  stroke-width: 2;
+  opacity: 0.18;
+  stroke-linecap: round;
+}
+.padi-ribbons .a {
+  animation: padi-drift 16s ease-in-out infinite;
+}
+.padi-ribbons .b {
+  animation: padi-drift 20s ease-in-out infinite reverse;
+}
+@keyframes padi-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-14px, 12px);
+  }
+}
+.padi-app {
+  position: relative;
+  z-index: 1;
+}
+
+/* Reference utility classes available to pages */
+.padi-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--blush);
+  border: 1.5px solid var(--pale);
+  color: var(--berry);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 7px 16px;
+  border-radius: 999px;
+}
+.padi-eyebrow::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--berry);
+  animation: padi-beat 2s infinite;
+}
+@keyframes padi-beat {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.55;
+  }
+}
+.padi-hl {
+  background: var(--peach);
+  padding: 0 0.12em;
+}
+.padi-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 2px solid var(--berry);
+  background: transparent;
+  color: var(--berry);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 0 20px;
+  min-height: 44px;
+  border-radius: 999px;
+  transition: background 0.25s, color 0.25s;
+}
+.padi-pill:hover {
+  background: var(--berry);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

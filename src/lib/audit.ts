@@ -1,55 +1,68 @@
-import { db } from "./db";
-import { sha256 } from "./ids";
-import { nowIso } from "./clock";
+import crypto from "node:crypto";
+import { getDb } from "./db";
 
-export type Actor = { tipo: "usuario" | "paciente" | "sistema"; id?: string | null; nombre?: string | null };
+const FORBIDDEN_CLINICAL_TERMS = [
+  "cancer",
+  "cáncer",
+  "carcinoma",
+  "lesion",
+  "lesión",
+  "displasia",
+  "positivo",
+  "anormal",
+  "maligno",
+  "malignidad",
+  "hsil",
+  "lsil",
+  "asc-us",
+  "nic ",
+  "colposcop",
+];
 
-export type BitacoraRow = {
-  id: number; estudio_id: string | null; actor_tipo: string; actor_id: string | null; actor_nombre: string | null;
-  accion: string; detalle: string | null; ip: string | null; creado_en: string; prev_hash: string; hash: string;
-};
-
-const GENESIS = "0".repeat(64);
-
-function rowHash(prev: string, r: Omit<BitacoraRow, "id" | "prev_hash" | "hash">) {
-  return sha256(
-    prev + "|" + JSON.stringify([r.estudio_id, r.actor_tipo, r.actor_id, r.actor_nombre, r.accion, r.detalle, r.ip, r.creado_en]),
-  );
-}
-
-export function audit(actor: Actor, accion: string, estudioId: string | null, detalle?: unknown, ip?: string | null, at?: string) {
-  const d = db();
-  const tx = d.transaction(() => {
-    const last = d.prepare("SELECT hash FROM bitacora ORDER BY id DESC LIMIT 1").get() as { hash: string } | undefined;
-    const prev = last?.hash ?? GENESIS;
-    const r = {
-      estudio_id: estudioId,
-      actor_tipo: actor.tipo,
-      actor_id: actor.id ?? null,
-      actor_nombre: actor.nombre ?? null,
-      accion,
-      detalle: detalle === undefined ? null : typeof detalle === "string" ? detalle : JSON.stringify(detalle),
-      ip: ip ?? null,
-      creado_en: at ?? nowIso(),
-    };
-    d.prepare(
-      `INSERT INTO bitacora (estudio_id, actor_tipo, actor_id, actor_nombre, accion, detalle, ip, creado_en, prev_hash, hash)
-       VALUES (@estudio_id, @actor_tipo, @actor_id, @actor_nombre, @accion, @detalle, @ip, @creado_en, @prev, @hash)`,
-    ).run({ ...r, prev, hash: rowHash(prev, r) });
-  });
-  tx();
-}
-
-export function verifyChain(): { ok: boolean; total: number; rotoEn?: number } {
-  const rows = db().prepare("SELECT * FROM bitacora ORDER BY id").all() as BitacoraRow[];
-  let prev = GENESIS;
-  for (const r of rows) {
-    if (r.prev_hash !== prev || rowHash(prev, r) !== r.hash) return { ok: false, total: rows.length, rotoEn: r.id };
-    prev = r.hash;
+/**
+ * Privacy-by-design guard: prevents accidental leakage of clinical findings
+ * in SMS, email, kiosk Wi-Fi, or LoRa/Mesh notifications.
+ */
+export function assertNoClinicalLeak(message: string): void {
+  const lower = message.toLowerCase();
+  for (const term of FORBIDDEN_CLINICAL_TERMS) {
+    if (lower.includes(term)) {
+      throw new Error(`Violación de privacidad: la notificación contiene término clínico prohibido ("${term}").`);
+    }
   }
-  return { ok: true, total: rows.length };
 }
 
-export function bitacoraDe(estudioId: string) {
-  return db().prepare("SELECT * FROM bitacora WHERE estudio_id = ? ORDER BY id").all(estudioId) as BitacoraRow[];
+export function maskContact(phone: string | null, email: string | null): string {
+  if (phone) {
+    const clean = phone.replace(/\s+/g, "");
+    return clean.length > 4 ? `${clean.slice(0, 3)}*****${clean.slice(-4)}` : "****";
+  }
+  if (email && email.includes("@")) {
+    const [u, domain] = email.split("@");
+    return `${u.slice(0, 2)}***@${domain}`;
+  }
+  return "Sin teléfono/correo (Vía Kiosco Asistido)";
+}
+
+export function logAudit(params: {
+  studyId: string | null;
+  actorType: "staff" | "patient" | "system" | "kiosk";
+  actorId: string;
+  actorName: string;
+  action: string;
+  detail: Record<string, unknown>;
+}): void {
+  const db = getDb();
+  db.prepare(
+    "INSERT INTO audit_logs (id, study_id, actor_type, actor_id, actor_name, action, detail_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+  ).run(
+    `aud-${crypto.randomUUID().slice(0, 8)}`,
+    params.studyId,
+    params.actorType,
+    params.actorId,
+    params.actorName,
+    params.action,
+    JSON.stringify(params.detail),
+    new Date().toISOString()
+  );
 }

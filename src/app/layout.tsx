@@ -1,30 +1,50 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { JetBrains_Mono, Poppins } from "next/font/google";
 import "./globals.css";
-import { ensureSeeded } from "@/lib/seed";
+
+// Self-hosted at build time by next/font (no runtime request to Google; works offline in the kiosk PWA).
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  style: ["normal", "italic"],
+  variable: "--font-poppins",
+  display: "swap",
+});
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "EIRA Resultados Seguros",
-  description: "Entrega digital segura de resultados de Papanicolaou: EIRA Movimiento Rosa A.C.",
+  title: "PaDi · EIRA — Expediente Único y Resultados Seguros",
+  description:
+    "Expediente digital único y entrega segura, inclusiva y offline-ready de resultados de Papanicolaou — EIRA Movimiento Rosa A.C.",
+  manifest: "/manifest.json",
 };
 
-export const dynamic = "force-dynamic";
-
-export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  await ensureSeeded();
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="es">
-      <body className="min-h-screen antialiased">
-        <header className="no-print border-b border-rose-100 bg-white">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl font-black tracking-widest text-rose-600">EIRA</span>
-              <span className="hidden text-sm text-slate-500 sm:inline">Resultados Seguros</span>
-            </Link>
-            <span className="rounded bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">PROTOTIPO: datos ficticios</span>
-          </div>
-        </header>
-        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+    <html lang="es" className={`${poppins.variable} ${jetbrains.variable}`}>
+      <body className="min-h-screen bg-[#FFFAFB] font-sans text-padi-ink antialiased">
+        {/* Background ribbons (PaDi reference) */}
+        <div className="padi-ribbons" aria-hidden="true">
+          <svg viewBox="0 0 1440 900" preserveAspectRatio="xMaxYMin slice">
+            <path className="r a" d="M880 -150C940 170 1250 310 1520 70" strokeWidth="270" />
+            <path
+              className="r b"
+              d="M1520 390C1200 390 1010 650 1150 810C1270 940 1520 850 1520 850"
+              strokeWidth="240"
+            />
+            <path className="echo a" d="M830 -150C890 190 1240 360 1520 120" />
+          </svg>
+        </div>
+        <div className="padi-app">{children}</div>
       </body>
     </html>
   );

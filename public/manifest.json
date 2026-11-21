@@ -1,0 +1,43 @@
+{
+  "name": "EIRA Resultados Seguros",
+  "short_name": "EIRA Seguro",
+  "description": "Plataforma segura, inclusiva y offline-ready para la entrega y seguimiento de resultados de Papanicolaou — EIRA Movimiento Rosa A.C.",
+  "start_url": "/kiosco",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "es-MX",
+  "theme_color": "#be1254",
+  "background_color": "#f8fafc",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23be1254'/%3E%3Cpath d='M96 146s-42-26-54-52c-9-19 2-40 22-44 13-3 25 3 32 13 7-10 19-16 32-13 20 4 31 25 22 44-12 26-54 52-54 52z' fill='%23ffffff'/%3E%3Ccircle cx='96' cy='88' r='10' fill='%23be1254'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23be1254'/%3E%3Cpath d='M256 392s-112-68-144-138c-24-50 6-108 58-118 35-7 67 8 86 35 19-27 51-42 86-35 52 10 82 68 58 118-32 70-144 138-144 138z' fill='%23ffffff'/%3E%3Ccircle cx='256' cy='234' r='26' fill='%23be1254'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Kiosco Comunitario RPi",
+      "short_name": "Kiosco",
+      "url": "/kiosco"
+    },
+    {
+      "name": "Portal de Pacientes",
+      "short_name": "Pacientes",
+      "url": "/paciente"
+    },
+    {
+      "name": "Consola Closed-Loop",
+      "short_name": "Alertas Loop",
+      "url": "/alertas-loop"
+    }
+  ]
+}

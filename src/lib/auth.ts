@@ -1,76 +1,143 @@
-import { cookies, headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { db, type Paciente, type Usuario } from "./db";
-import { kv } from "./kv";
-import { randomToken } from "./ids";
+import crypto from "node:crypto";
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import { getDb } from "./db";
+import type { StaffRole, StaffUser } from "./types";
 
-export const STAFF_COOKIE = "eira_staff";
-export const PAC_COOKIE = "eira_pac";
-export const STAFF_TTL = 8 * 60 * 60;
-export const PAC_TTL = 15 * 60;
+const SESSION_SECRET = process.env.EIRA_SESSION_SECRET || "eira-vibeathon-2026-dev-secret-key-change-in-prod";
+export const STAFF_COOKIE = "eira_staff_session";
+export const PATIENT_COOKIE = "eira_patient_session";
 
-export const SECURE_COOKIES = process.env.NODE_ENV === "production" && process.env.INSECURE_COOKIES !== "1";
-
-const cookieOpts = (maxAge?: number) => ({
-  httpOnly: true,
-  sameSite: "lax" as const,
-  secure: SECURE_COOKIES,
-  path: "/",
-  ...(maxAge ? { maxAge } : {}),
-});
-
-export function clientIp() {
-  const h = headers();
-  return (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || h.get("x-real-ip") || "local";
+function signPayload(payload: string): string {
+  const b64 = Buffer.from(payload, "utf8").toString("base64url");
+  const sig = crypto.createHmac("sha256", SESSION_SECRET).update(b64).digest("base64url");
+  return `${b64}.${sig}`;
 }
 
-export async function createStaffSession(userId: string) {
-  const t = randomToken();
-  await (await kv()).set(`ss:${t}`, userId, STAFF_TTL);
-  cookies().set(STAFF_COOKIE, t, cookieOpts(STAFF_TTL));
+function verifyPayload(token: string | undefined): Record<string, unknown> | null {
+  if (!token || !token.includes(".")) return null;
+  const [b64, sig] = token.split(".");
+  if (!b64 || !sig) return null;
+  const expected = crypto.createHmac("sha256", SESSION_SECRET).update(b64).digest("base64url");
+  try {
+    const a = Buffer.from(sig);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+    const parsed = JSON.parse(Buffer.from(b64, "base64url").toString("utf8")) as Record<string, unknown>;
+    if (typeof parsed.exp === "number" && Date.now() > parsed.exp) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
-export async function destroyStaffSession() {
-  const t = cookies().get(STAFF_COOKIE)?.value;
-  if (t) await (await kv()).del(`ss:${t}`);
-  cookies().delete(STAFF_COOKIE);
+export function createStaffSessionToken(user: StaffUser): string {
+  return signPayload(
+    JSON.stringify({
+      type: "staff",
+      userId: user.id,
+      role: user.role,
+      exp: Date.now() + 8 * 60 * 60 * 1000, // 8 hours
+    })
+  );
 }
 
-export async function getStaff(): Promise<Usuario | null> {
-  const t = cookies().get(STAFF_COOKIE)?.value;
-  if (!t) return null;
-  const id = await (await kv()).get(`ss:${t}`);
-  if (!id) return null;
-  return (db().prepare("SELECT * FROM usuarios WHERE id = ? AND activo = 1").get(id) as Usuario) ?? null;
+export function createPatientSessionToken(patientId: string, folio: string): string {
+  return signPayload(
+    JSON.stringify({
+      type: "patient",
+      patientId,
+      folio,
+      exp: Date.now() + 15 * 60 * 1000, // 15 minutes strict patient session
+    })
+  );
 }
 
-export async function requireStaff(roles?: string[]): Promise<Usuario> {
-  const u = await getStaff();
-  if (!u) redirect("/staff/login");
-  if (roles && !roles.includes(u.rol)) redirect("/staff?error=permiso");
-  return u;
+export async function getStaffSession(): Promise<StaffUser | null> {
+  const store = await cookies();
+  const token = store.get(STAFF_COOKIE)?.value;
+  const parsed = verifyPayload(token);
+  if (!parsed || parsed.type !== "staff" || typeof parsed.userId !== "string") return null;
+
+  const db = getDb();
+  const user = db
+    .prepare("SELECT id, name, email, role, license_number, community FROM users WHERE id = ?")
+    .get(parsed.userId) as StaffUser | undefined;
+  return user ?? null;
 }
 
-export async function createPacSession(pacienteId: string) {
-  const t = randomToken();
-  await (await kv()).set(`ps:${t}`, pacienteId, PAC_TTL);
-  // Cookie de sesión del navegador; la expiración por inactividad la controla el TTL renovable en el servidor.
-  cookies().set(PAC_COOKIE, t, cookieOpts());
+export async function getPatientSession(): Promise<{ patientId: string; folio: string } | null> {
+  const store = await cookies();
+  const token = store.get(PATIENT_COOKIE)?.value;
+  const parsed = verifyPayload(token);
+  if (
+    !parsed ||
+    parsed.type !== "patient" ||
+    typeof parsed.patientId !== "string" ||
+    typeof parsed.folio !== "string"
+  ) {
+    return null;
+  }
+  return { patientId: parsed.patientId, folio: parsed.folio };
 }
 
-export async function destroyPacSession() {
-  const t = cookies().get(PAC_COOKIE)?.value;
-  if (t) await (await kv()).del(`ps:${t}`);
-  cookies().delete(PAC_COOKIE);
+export async function requireStaffRoles(allowedRoles: StaffRole[]): Promise<StaffUser | null> {
+  const staff = await getStaffSession();
+  if (!staff) return null;
+  if (!allowedRoles.includes(staff.role)) return null;
+  return staff;
 }
 
-export async function getPaciente(): Promise<{ paciente: Paciente; token: string } | null> {
-  const t = cookies().get(PAC_COOKIE)?.value;
-  if (!t) return null;
-  const store = await kv();
-  const id = await store.get(`ps:${t}`);
-  if (!id) return null;
-  await store.set(`ps:${t}`, id, PAC_TTL);
-  const p = db().prepare("SELECT * FROM pacientes WHERE id = ?").get(id) as Paciente | undefined;
-  return p ? { paciente: p, token: t } : null;
+export const ALL_STAFF_ROLES: StaffRole[] = ["laboratorio", "eira_admin", "medico", "promotora_kiosco"];
+
+/**
+ * Guard for staff-only API routes. Returns either the authenticated staff user
+ * or a ready-to-return 401/403 JSON response.
+ */
+export async function requireStaffApi(
+  allowedRoles: StaffRole[] = ALL_STAFF_ROLES
+): Promise<{ staff: StaffUser; response?: undefined } | { staff?: undefined; response: NextResponse }> {
+  const staff = await getStaffSession();
+  if (!staff) {
+    return {
+      response: NextResponse.json(
+        { error: "Autenticación de personal requerida." },
+        { status: 401, headers: { "Cache-Control": "no-store" } }
+      ),
+    };
+  }
+  if (!allowedRoles.includes(staff.role)) {
+    return {
+      response: NextResponse.json(
+        { error: `Permisos insuficientes para el rol ${staff.role}.` },
+        { status: 403, headers: { "Cache-Control": "no-store" } }
+      ),
+    };
+  }
+  return { staff };
+}
+
+/**
+ * Demo mode exposes conveniences that must never exist in a real deployment
+ * (e.g. returning the OTP in the API response because no SMS gateway exists).
+ * On by default in development; in production it must be enabled explicitly
+ * with EIRA_DEMO_MODE=1.
+ */
+export function isDemoMode(): boolean {
+  const flag = process.env.EIRA_DEMO_MODE;
+  if (flag === "1" || flag === "true") return true;
+  if (flag === "0" || flag === "false") return false;
+  return process.env.NODE_ENV !== "production";
+}
+
+export function isHttpsRequest(request: Request): boolean {
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  if (forwardedProto) {
+    return forwardedProto.split(",")[0].trim().toLowerCase() === "https";
+  }
+  try {
+    return new URL(request.url).protocol === "https:";
+  } catch {
+    return false;
+  }
 }
