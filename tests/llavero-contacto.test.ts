@@ -140,6 +140,9 @@ test("malla: ruta por Briar agrupa los pendientes y el acuse de regreso registra
   assert.ok(esNeutro(ruta.mensaje) && ruta.mensaje.includes(a.ref) && !ruta.mensaje.includes(a.folio), "sin folio de muestra ni términos clínicos");
   assert.equal(await codigo(() => ml.registrarAcuseMalla(t.admin, { texto: "ya avisé a todas", portador: "Marta Ruiz" })), "SIN_CLAVES");
   assert.equal(await codigo(() => ml.registrarAcuseMalla(t.medico, { texto: `RECIBIDO ${a.ref}`, portador: "Marta Ruiz" })), "SIN_PERMISO");
+  assert.equal(await codigo(() => ml.registrarAcuseMalla(t.admin, { texto: `No recibido ${a.ref}`, portador: "Marta Ruiz" })), "SIN_CLAVES");
+  assert.equal(await codigo(() => ml.registrarAcuseMalla(t.admin, { texto: `RECIBIDO ${a.ref}9`, portador: "Marta Ruiz" })), "SIN_CLAVES", "clave más larga no cuenta");
+  assert.equal(await codigo(() => ml.registrarAcuseMalla(t.admin, { texto: ruta.mensaje, portador: "Marta Ruiz" })), "SIN_CLAVES", "citar la ruta no confirma nada");
   const r = ml.registrarAcuseMalla(t.admin, { texto: `Hola, recibido ${a.ref.toLowerCase()} y FFFFFFFF`, portador: "Marta Ruiz" });
   assert.deepEqual(r, { confirmados: [a.ref], ya_registrados: [], desconocidas: ["FFFFFFFF"] });
   assert.deepEqual(ml.registrarAcuseMalla(t.admin, { texto: `RECIBIDO ${a.ref}`, portador: "Marta Ruiz" }).ya_registrados, [a.ref]);

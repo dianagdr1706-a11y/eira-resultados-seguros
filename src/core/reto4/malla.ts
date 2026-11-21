@@ -86,7 +86,7 @@ export function rutasMalla(ctx: Ctx, portalUrl: string = PORTAL_URL): RutaMalla[
       `EIRA · Ruta: ${punto} · ${avisos.length} aviso${avisos.length === 1 ? "" : "s"}`,
       `Avisa a cada persona: "Tienes un documento disponible. Consulta en ${portalUrl}, acerca tu llavero en el punto EIRA o llama al 341 410 8111."`,
       ...avisos.map((a) => `- ${a.id_eira} · clave ${a.ref}`),
-      "Cuando le avises, responde aquí: RECIBIDO y la clave. Ejemplo: RECIBIDO " + avisos[0].ref,
+      "Cuando le avises, responde aquí con la palabra RECIBIDO seguida de la clave de esa persona.",
     ].join("\n");
     if (!esNeutro(mensaje)) throw new Error("Ruta con términos clínicos bloqueada");
     return { punto, avisos: avisos.map((a) => ({ ref: a.ref, id_eira: a.id_eira })), mensaje };
@@ -100,8 +100,9 @@ export function rutasMalla(ctx: Ctx, portalUrl: string = PORTAL_URL): RutaMalla[
 export function registrarAcuseMalla(ctx: Ctx, d: { texto: string; portador: string }) {
   exigir(ctx, "reto4.malla");
   if (d.portador.trim().length < 3) throw new ErrorDominio("DATOS_INCOMPLETOS", "Escribe el nombre de quien trajo el acuse");
-  const claves = Array.from(new Set(Array.from(d.texto.toUpperCase().matchAll(/RECIBID[OA]S?[\s:,]*((?:[0-9A-F]{8}[\s,;Y]*)+)/g))
-    .flatMap((m) => m[1].match(/[0-9A-F]{8}/g) ?? [])));
+  // Solo claves exactas de 8 caracteres tras RECIBIDO; "NO RECIBIDO ..." no cuenta.
+  const claves = Array.from(new Set(Array.from(d.texto.toUpperCase().matchAll(/(?<!\bNO\s+)\bRECIBID[OA]S?\b[\s:,]*((?:\b[0-9A-F]{8}\b[\s,;Y]*)+)/g))
+    .flatMap((m) => m[1].match(/\b[0-9A-F]{8}\b/g) ?? [])));
   if (!claves.length) throw new ErrorDominio("SIN_CLAVES", "No se encontró ninguna clave con la palabra RECIBIDO");
   const avisos = listarAvisosMalla(ctx);
   const r = { confirmados: [] as string[], ya_registrados: [] as string[], desconocidas: [] as string[] };
