@@ -23,8 +23,8 @@ export type AvisoMalla = {
 const refDe = (estudioId: string) => sha256(`malla:${estudioId}`).slice(0, 8).toUpperCase();
 
 /** Texto que la mula copia a Briar/Bridgefy o pasa por QR. */
-export function mensajeMalla(estudioId: string): string {
-  const m = `EIRA: Tienes un documento disponible. Consulta en ${PORTAL_URL}, acerca tu llavero en el punto EIRA o llama al 341 410 8111. Ref ${refDe(estudioId)}`;
+export function mensajeMalla(estudioId: string, portalUrl: string = PORTAL_URL): string {
+  const m = `EIRA: Tienes un documento disponible. Consulta en ${portalUrl}, acerca tu llavero en el punto EIRA o llama al 341 410 8111. Ref ${refDe(estudioId)}`;
   if (!esNeutro(m)) throw new Error("Aviso con términos clínicos bloqueado");
   return m;
 }
@@ -32,7 +32,7 @@ export function mensajeMalla(estudioId: string): string {
 type Fila = { id: number; estudio_id: string; detalle: string | null; creado_en: string; folio_muestra: string; estado_estudio: string; id_eira: string };
 
 /** Cola de avisos que el ciclo de contacto mandó a la malla, con su entrega si ya se confirmó. */
-export function listarAvisosMalla(ctx: Ctx): AvisoMalla[] {
+export function listarAvisosMalla(ctx: Ctx, portalUrl?: string): AvisoMalla[] {
   exigir(ctx, "reto4.malla");
   const filas = db().prepare(
     `SELECT i.id, i.estudio_id, i.detalle, i.creado_en, e.folio_muestra, e.estado AS estado_estudio, p.id_eira
@@ -47,7 +47,7 @@ export function listarAvisosMalla(ctx: Ctx): AvisoMalla[] {
   return filas.map((f) => ({
     intento_id: f.id, estudio_id: f.estudio_id, folio: f.folio_muestra, id_eira: f.id_eira,
     punto: (JSON.parse(f.detalle ?? "{}") as { destino?: string }).destino ?? "Punto comunitario",
-    ref: refDe(f.estudio_id), mensaje: mensajeMalla(f.estudio_id), creado_en: f.creado_en,
+    ref: refDe(f.estudio_id), mensaje: mensajeMalla(f.estudio_id, portalUrl), creado_en: f.creado_en,
     consultado: ["consultado", "entregado_asistido"].includes(f.estado_estudio), entrega: porIntento.get(f.id) ?? null,
   }));
 }

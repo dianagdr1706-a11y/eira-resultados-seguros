@@ -1,5 +1,6 @@
 import QRCode from "qrcode";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { requireStaff } from "@/lib/auth";
 import { fmt } from "@/lib/estados";
 import { APPS_MALLA, listarAvisosMalla } from "@/core/reto4/malla";
@@ -11,7 +12,11 @@ const ERR: Record<string, string> = { DATOS_INCOMPLETOS: "Escribe el nombre de q
 
 export default async function Malla({ searchParams }: { searchParams: { error?: string; ok?: string } }) {
   const u = await requireStaff(["eira_admin"]);
-  const avisos = listarAvisosMalla({ usuario: u });
+  const h = headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  // Sin PORTAL_URL configurada, el aviso apunta al portal del mismo sitio para que el enlace abra de verdad.
+  const portal = process.env.PORTAL_URL || !host ? undefined : `${h.get("x-forwarded-proto") ?? "https"}://${host}/portal`;
+  const avisos = listarAvisosMalla({ usuario: u }, portal);
   const qrs = await Promise.all(avisos.map((a) => QRCode.toDataURL(a.mensaje, { margin: 1, width: 150 })));
   return (
     <div className="space-y-4">
@@ -39,6 +44,7 @@ export default async function Malla({ searchParams }: { searchParams: { error?: 
               <div className="space-y-2">
                 <pre className="whitespace-pre-wrap rounded bg-slate-50 p-2 font-sans">{a.mensaje}</pre>
                 <Copiar texto={a.mensaje} />
+                <p className="text-xs text-slate-500">El QR contiene solo este texto: se lee con la cámara aunque el celular esté en modo avión. El enlace abre el portal cuando hay internet.</p>
               </div>
             </div>
             {a.entrega ? (
