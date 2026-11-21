@@ -10,6 +10,7 @@ import { kv } from "@/lib/kv";
 import { resetDemo } from "@/sim/datos-demo";
 import * as sim from "@/sim/controles";
 import * as core from "@/core/reto4/estudios";
+import { confirmarEntregaMalla } from "@/core/reto4/malla";
 import { ejecutarCicloContacto } from "@/core/reto4/contacto";
 import { ErrorDominio } from "@/core/errores";
 import type { Ctx } from "@/core/permisos";
@@ -137,4 +138,11 @@ export async function reiniciarDemo() {
   await resetDemo();
   await destroyStaffSession();
   redirect("/staff/login?ok=reinicio");
+}
+
+export async function entregaMalla(fd: FormData) {
+  const u = await requireStaff(["eira_admin"]);
+  ejecutar(() => confirmarEntregaMalla(ctxDe(u), { intentoId: Number(fd.get("intento_id")), portador: String(fd.get("portador") ?? ""), app: String(fd.get("app") ?? "") }), "/staff/malla");
+  revalidatePath("/staff/malla");
+  redirect("/staff/malla?ok=1");
 }

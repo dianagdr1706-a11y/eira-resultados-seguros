@@ -110,3 +110,20 @@ test("ciclo de contacto: una paciente que ya consultó no recibe más avisos; so
   const msgs = t.db().prepare("SELECT mensaje FROM notificaciones WHERE tipo = 'seguimiento'").all() as { mensaje: string }[];
   assert.ok(msgs.length > 0 && msgs.every((m) => esNeutro(m.mensaje)));
 });
+
+test("malla: el aviso es neutro y opaco, y la entrega por mula se registra una sola vez", async () => {
+  const ml = await import("@/core/reto4/malla");
+  const { esNeutro } = await import("@/lib/notify");
+  const avisos = ml.listarAvisosMalla(t.admin);
+  assert.ok(avisos.length > 0);
+  const a = avisos[0];
+  assert.ok(esNeutro(a.mensaje));
+  assert.ok(!a.mensaje.includes(a.folio) && !a.mensaje.includes(a.id_eira), "sin folio ni ID de paciente");
+  assert.equal(a.entrega, null);
+  assert.equal(await codigo(() => ml.listarAvisosMalla(t.medico)), "SIN_PERMISO");
+  assert.equal(await codigo(() => ml.confirmarEntregaMalla(t.admin, { intentoId: a.intento_id, portador: "", app: "briar" })), "DATOS_INCOMPLETOS");
+  assert.equal(await codigo(() => ml.confirmarEntregaMalla(t.admin, { intentoId: 999999, portador: "Marta Ruiz", app: "briar" })), "NO_ENCONTRADO");
+  ml.confirmarEntregaMalla(t.admin, { intentoId: a.intento_id, portador: "Marta Ruiz", app: "briar" });
+  assert.equal(await codigo(() => ml.confirmarEntregaMalla(t.admin, { intentoId: a.intento_id, portador: "Marta Ruiz", app: "briar" })), "YA_ENTREGADO");
+  assert.deepEqual(ml.listarAvisosMalla(t.admin).find((x) => x.intento_id === a.intento_id)?.entrega?.portador, "Marta Ruiz");
+});

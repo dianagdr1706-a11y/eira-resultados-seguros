@@ -12,6 +12,7 @@ import * as r4 from "@/core/reto4/estudios";
 import * as portal from "@/core/reto4/portal";
 import * as llavero from "@/core/reto4/llavero";
 import * as contacto from "@/core/reto4/contacto";
+import * as malla from "@/core/reto4/malla";
 import * as bit from "@/core/bitacora";
 import * as sim from "@/sim/controles";
 import { db, type Usuario } from "@/lib/db";
@@ -101,6 +102,8 @@ export const RUTAS: Ruta[] = [
     return { datos: { siguiente: "documentos" }, efecto: { abrirSesionPaciente: r.pacienteId } };
   } },
   { metodo: "POST", ruta: "/reto4/contacto/ciclo", acceso: "personal", desc: "Ejecuta el ciclo: escala al siguiente medio tras 72 h sin consulta", fn: (p) => ok(contacto.ejecutarCicloContacto(c(p))) },
+  { metodo: "GET", ruta: "/reto4/malla", acceso: "personal", desc: "Cola de avisos neutros para llevar por malla (Briar/Bridgefy/Nearby)", fn: (p) => ok(malla.listarAvisosMalla(c(p))) },
+  { metodo: "POST", ruta: "/reto4/malla/:id/entrega", acceso: "personal", desc: "La mula confirma la entrega {portador, app}", fn: (p) => ok(malla.confirmarEntregaMalla(c(p), { intentoId: Number(p.params.id), portador: String(p.body.portador ?? ""), app: String(p.body.app ?? "") })) },
   { metodo: "GET", ruta: "/reto4/estudios/:id/contacto", acceso: "personal", desc: "Intentos de contacto de un estudio", fn: (p) => { r4.obtenerEstudio(c(p), p.params.id); return ok(contacto.intentosDe(p.params.id)); } },
 
   // ───────── Reto 4 · Portal de la paciente ─────────
