@@ -171,6 +171,7 @@ export async function reintentarNotificacion(fd: FormData) {
 export async function registrarEntrega(fd: FormData) {
   const u = await requireStaff(["eira_admin", "medico"]);
   const e = getEstudio(String(fd.get("estudio_id")));
+  if (!["autorizado_digital", "autorizado_acompanado", "notificado"].includes(e.estado)) redirect(`/staff/estudios/${e.id}?error=estado`);
   const modalidad = String(fd.get("modalidad"));
   const resultado = String(fd.get("resultado") ?? "entregado");
   const observaciones = String(fd.get("observaciones") ?? "").trim();
@@ -210,8 +211,9 @@ export async function toggleProveedor(fd: FormData) {
 }
 
 export async function avanzarReloj(fd: FormData) {
-  await requireStaff();
+  await requireStaff(["eira_admin", "auditoria"]);
   const dias = Number(fd.get("dias") ?? 0);
+  if (!Number.isFinite(dias) || Math.abs(dias) > 365) redirect("/staff");
   if (dias === 0) resetClock();
   else advanceDays(dias);
   redirect("/staff");
