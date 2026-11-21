@@ -15,7 +15,7 @@ export default async function LlaveroPaciente({ params }: { params: { id: string
       <h1 className="h1">Llavero NFC de {p.id_eira}</h1>
       <div className="card space-y-3">
         <p>El enlace es lo único que se graba en el llavero. No contiene nombre ni resultado, y se muestra una sola vez: al emitir otro, el anterior deja de servir.</p>
-        <Emitir pacienteId={p.id} />
+        <Emitir pacienteId={p.id} base={process.env.APP_URL?.replace(/\/$/, "") || null} />
       </div>
     </div>
   );

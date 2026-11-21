@@ -5,7 +5,7 @@ import { useState } from "react";
 import Grabar from "./Grabar";
 
 /** Emite el llavero solo cuando la persona lo pide: cada emisión desactiva el llavero anterior. */
-export default function Emitir({ pacienteId }: { pacienteId: string }) {
+export default function Emitir({ pacienteId, base }: { pacienteId: string; base: string | null }) {
   const [llavero, setLlavero] = useState<{ url: string; qr: string } | null>(null);
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
@@ -17,7 +17,7 @@ export default function Emitir({ pacienteId }: { pacienteId: string }) {
       const r = await fetch(`/api/v1/reto4/pacientes/${pacienteId}/llavero`, { method: "POST", credentials: "same-origin" });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error?.mensaje ?? "No se pudo emitir el llavero");
-      const url = `${window.location.origin}${j.ruta}`;
+      const url = `${base ?? window.location.origin}${j.ruta}`;
       setLlavero({ url, qr: await QRCode.toDataURL(url, { margin: 1, width: 220 }) });
     } catch (e) {
       setError((e as Error).message);
