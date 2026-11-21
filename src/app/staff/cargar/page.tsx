@@ -1,8 +1,8 @@
 import { requireStaff } from "@/lib/auth";
 import { subirPdf } from "../actions";
-import { PACIENTES_DEMO } from "@/lib/seed";
+import { PACIENTES_DEMO } from "@/sim/datos-demo";
 
-const ERR: Record<string, string> = { datos: "Falta el archivo o el folio de muestra.", pdf: "El archivo no es un PDF válido." };
+const ERR: Record<string, string> = { DATOS_INCOMPLETOS: "Falta el archivo o el folio de muestra.", NO_ES_PDF: "El archivo no es un PDF válido.", datos: "Falta el archivo o el folio de muestra.", pdf: "El archivo no es un PDF válido." };
 
 export default async function Cargar({ searchParams }: { searchParams: { error?: string } }) {
   await requireStaff(["laboratorio", "eira_admin"]);

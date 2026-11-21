@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { DATA_DIR, UPLOAD_DIR, db, getSetting, setSetting, type Paciente } from "./db";
-import { hashSecret, newId, sha256 } from "./ids";
-import { audit } from "./audit";
-import { samplePdf } from "./pdf";
+import { DATA_DIR, UPLOAD_DIR, db, getSetting, setSetting, type Paciente } from "@/lib/db";
+import { hashSecret, newId, sha256 } from "@/lib/ids";
+import { audit } from "@/lib/audit";
+import { samplePdf } from "@/sim/pdf-muestra";
 
 const DAY = 86400000;
 const ago = (d: number) => new Date(Date.now() - d * DAY).toISOString();
@@ -21,6 +21,7 @@ export const USUARIOS_DEMO = [
   { usuario: "admin", nombre: "Carmen Ruiz (EIRA)", rol: "eira_admin", cedula: null },
   { usuario: "medico", nombre: "Dra. Patricia Vázquez", rol: "medico", cedula: "12345678" },
   { usuario: "auditoria", nombre: "Auditoría EIRA", rol: "auditoria", cedula: null },
+  { usuario: "captura", nombre: "Brigadista de jornada (captura)", rol: "captura", cedula: null },
 ];
 
 export const DEMO_PASSWORD = "demo";

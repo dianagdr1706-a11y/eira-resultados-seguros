@@ -1,5 +1,5 @@
 import { db, type Estudio } from "./db";
-import { daysSince } from "./clock";
+import { daysSince } from "@/sim/reloj";
 
 export type EstudioRow = Estudio & { paciente_nombre: string | null; id_eira: string | null; municipio: string | null; canal_preferido: string | null };
 

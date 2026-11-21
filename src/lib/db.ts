@@ -16,7 +16,25 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE TABLE IF NOT EXISTS pacientes (
   id TEXT PRIMARY KEY, id_eira TEXT UNIQUE NOT NULL, nombre TEXT NOT NULL, fecha_nacimiento TEXT NOT NULL,
   telefono TEXT, correo TEXT, canal_preferido TEXT NOT NULL DEFAULT 'sms', municipio TEXT, sede_ultima TEXT,
-  pin_hash TEXT, pin_expira TEXT, tercero_autorizado TEXT
+  pin_hash TEXT, pin_expira TEXT, tercero_autorizado TEXT,
+  curp TEXT, version INTEGER NOT NULL DEFAULT 1, creado_en TEXT, actualizado_en TEXT
+);
+CREATE TABLE IF NOT EXISTS visitas (
+  id TEXT PRIMARY KEY, paciente_id TEXT NOT NULL REFERENCES pacientes(id), fecha TEXT NOT NULL,
+  sede TEXT, municipio TEXT, motivo TEXT, capturado_por TEXT, origen TEXT NOT NULL DEFAULT 'en_linea', creado_en TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS servicios (
+  id TEXT PRIMARY KEY, visita_id TEXT NOT NULL REFERENCES visitas(id), tipo TEXT NOT NULL,
+  estado TEXT NOT NULL DEFAULT 'realizado', notas TEXT, creado_en TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS decisiones_coincidencia (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, datos_capturados TEXT NOT NULL, candidatos TEXT NOT NULL,
+  decision TEXT NOT NULL, paciente_id TEXT, motivo TEXT, usuario_id TEXT NOT NULL, creado_en TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS sync_ops (
+  op_id TEXT PRIMARY KEY, dispositivo TEXT NOT NULL, tipo TEXT NOT NULL, datos TEXT NOT NULL,
+  capturado_en TEXT, estado TEXT NOT NULL, detalle TEXT, resultado_id TEXT, usuario_id TEXT,
+  recibido_en TEXT NOT NULL, resuelto_en TEXT, resuelto_por TEXT
 );
 CREATE TABLE IF NOT EXISTS estudios (
   id TEXT PRIMARY KEY, folio_muestra TEXT NOT NULL, paciente_id TEXT REFERENCES pacientes(id),
@@ -59,6 +77,9 @@ export function db(): Database.Database {
   d.pragma("journal_mode = WAL");
   d.pragma("foreign_keys = ON");
   d.exec(SCHEMA);
+  const cols = (d.prepare("PRAGMA table_info(pacientes)").all() as { name: string }[]).map((c) => c.name);
+  for (const [c, def] of [["curp", "TEXT"], ["version", "INTEGER NOT NULL DEFAULT 1"], ["creado_en", "TEXT"], ["actualizado_en", "TEXT"]])
+    if (!cols.includes(c)) d.exec(`ALTER TABLE pacientes ADD COLUMN ${c} ${def}`);
   g.__db = d;
   return d;
 }
@@ -76,6 +97,20 @@ export type Paciente = {
   id: string; id_eira: string; nombre: string; fecha_nacimiento: string; telefono: string | null;
   correo: string | null; canal_preferido: string; municipio: string | null; sede_ultima: string | null;
   pin_hash: string | null; pin_expira: string | null; tercero_autorizado: string | null;
+  curp: string | null; version: number; creado_en: string | null; actualizado_en: string | null;
+};
+
+export type Visita = {
+  id: string; paciente_id: string; fecha: string; sede: string | null; municipio: string | null; motivo: string | null;
+  capturado_por: string | null; origen: string; creado_en: string;
+};
+
+export type Servicio = { id: string; visita_id: string; tipo: string; estado: string; notas: string | null; creado_en: string };
+
+export type SyncOp = {
+  op_id: string; dispositivo: string; tipo: string; datos: string; capturado_en: string | null; estado: string;
+  detalle: string | null; resultado_id: string | null; usuario_id: string | null; recibido_en: string;
+  resuelto_en: string | null; resuelto_por: string | null;
 };
 
 export type Estudio = {

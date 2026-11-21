@@ -1,5 +1,5 @@
 import { loginStaff } from "../actions";
-import { USUARIOS_DEMO, DEMO_PASSWORD } from "@/lib/seed";
+import { USUARIOS_DEMO, DEMO_PASSWORD } from "@/sim/datos-demo";
 import { ROLES } from "@/lib/estados";
 
 const ERR: Record<string, string> = {

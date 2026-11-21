@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getStaff } from "@/lib/auth";
-import { PACIENTES_DEMO } from "@/lib/seed";
-import { samplePdf } from "@/lib/pdf";
+import { PACIENTES_DEMO } from "@/sim/datos-demo";
+import { samplePdf } from "@/sim/pdf-muestra";
 
 export async function GET(req: Request) {
   const u = await getStaff();

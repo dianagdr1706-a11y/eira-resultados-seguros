@@ -1,16 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireStaff } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { clientIp, requireStaff } from "@/lib/auth";
+import { intentarAlterar as alterar } from "@/core/bitacora";
 
 export async function intentarAlterar() {
-  await requireStaff(["eira_admin", "auditoria"]);
-  let msg = "UPDATE aplicado (no debería ocurrir)";
-  try {
-    db().prepare("UPDATE bitacora SET accion = 'ALTERADO' WHERE id = (SELECT MIN(id) FROM bitacora)").run();
-  } catch (e) {
-    msg = `UPDATE rechazado: ${(e as Error).message}`;
-  }
-  redirect(`/staff/bitacora?alterar=${encodeURIComponent(msg)}`);
+  const u = await requireStaff(["eira_admin", "auditoria"]);
+  const r = alterar({ usuario: u, ip: clientIp() });
+  redirect(`/staff/bitacora?alterar=${encodeURIComponent(r.mensaje)}`);
 }

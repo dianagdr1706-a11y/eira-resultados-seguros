@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { ensureSeeded } from "@/lib/seed";
+import { ensureSeeded } from "@/sim/datos-demo";
 
 export const metadata: Metadata = {
   title: "EIRA Resultados Seguros",

@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { sha256 } from "./ids";
-import { nowIso } from "./clock";
+import { nowIso } from "@/sim/reloj";
 
 export type Actor = { tipo: "usuario" | "paciente" | "sistema"; id?: string | null; nombre?: string | null };
 
