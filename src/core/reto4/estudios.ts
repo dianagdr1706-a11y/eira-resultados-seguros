@@ -217,7 +217,7 @@ export function obtenerEstudio(ctx: Ctx, id: string) {
   const doc = db().prepare("SELECT * FROM documentos WHERE estudio_id = ? AND vigente = 1").get(id) as Documento | undefined;
   return {
     estudio: { ...e, bethesda_label: BETHESDA.find((b) => b.id === e.bethesda)?.label ?? null },
-    documento: doc ? { sha256: doc.sha256, nombre: doc.nombre_original, bytes: doc.tamano, url: `/api/staff/pdf/${id}` } : null,
+    documento: doc ? { sha256: doc.sha256, nombre: doc.nombre_original, bytes: doc.tamano, url: `/api/staff/pdf/${doc.id}` } : null,
     paciente: p && {
       id: p.id, id_eira: p.id_eira, nombre: p.nombre, fecha_nacimiento: p.fecha_nacimiento, municipio: p.municipio,
       telefono: maskPhone(p.telefono), correo: maskEmail(p.correo), canal_preferido: p.canal_preferido,
