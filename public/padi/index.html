@@ -1191,7 +1191,7 @@ $('#xsearch').addEventListener('input',e=>{clearTimeout(xst);const q=e.target.va
   $('#xres').innerHTML=rs.map(p=>`<button type="button" class="chp" data-xp="${p.id}">${esc(p.nombre)} · ${esc(p.fecha_nacimiento)} · ${esc(p.id_eira)}</button>`).join('');
   $$('[data-xp]').forEach(b=>b.onclick=()=>verExp(b.dataset.xp))},250)});
 $('#rsync').onclick=async()=>{
-  try{const r=await api('POST','/reto1/sync',{dispositivo:'padi-navegador',operaciones:Q()});setQ([]);
+  try{const r=await api('POST','/reto1/sync',{dispositivo:'padi-navegador',operaciones:Q()});const mal=new Set(r.resultados.filter(x=>x.estado==='rechazada').map(x=>x.op_id));setQ(Q().filter(o=>mal.has(o.op_id)));if(mal.size)toast(`${mal.size} captura(s) con datos inválidos siguen guardadas en este dispositivo`);
     $('#rcand').innerHTML=`<div class="sem on g"><div><b>Sincronizado</b><span>${esc(Object.entries(r.resumen).map(([k,v])=>`${v} ${k.replace(/_/g,' ')}`).join(' · '))}. Lo que se parece a otro expediente espera la decisión de administración.</span></div></div>`;
     const a=r.resultados.find(x=>x.estado==='aplicada'&&x.detalle&&x.detalle.id_eira);if(a)verExp(a.resultado_id)}
   catch(e){toast(e.message)}};
