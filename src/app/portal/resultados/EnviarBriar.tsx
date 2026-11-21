@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Entrega el documento como foto a la app que la titular elija (Briar solo acepta texto e imágenes) con el menú de
@@ -9,8 +9,9 @@ import { useState } from "react";
  */
 type PdfJs = {
   GlobalWorkerOptions: { workerSrc: string };
-  getDocument: (o: { data: ArrayBuffer }) => { promise: Promise<{
+  getDocument: (o: { data: ArrayBuffer; isEvalSupported: boolean }) => { promise: Promise<{
     numPages: number;
+    destroy: () => Promise<void>;
     getPage: (n: number) => Promise<{
       getViewport: (o: { scale: number }) => { width: number; height: number };
       render: (o: { canvasContext: CanvasRenderingContext2D; viewport: unknown }) => { promise: Promise<void> };
@@ -35,8 +36,10 @@ function cargarPdfJs(): Promise<PdfJs> {
 }
 
 async function pdfAFotos(datos: ArrayBuffer): Promise<File[]> {
-  const pdf = await (await cargarPdfJs()).getDocument({ data: datos }).promise;
+  // isEvalSupported: false impide que un PDF malicioso ejecute código al dibujarse (CVE-2024-4367).
+  const pdf = await (await cargarPdfJs()).getDocument({ data: datos, isEvalSupported: false }).promise;
   const fotos: File[] = [];
+  try {
   for (let n = 1; n <= pdf.numPages; n++) {
     const pagina = await pdf.getPage(n);
     const viewport = pagina.getViewport({ scale: 2 });
@@ -51,12 +54,17 @@ async function pdfAFotos(datos: ArrayBuffer): Promise<File[]> {
     if (!blob) throw new Error("imagen");
     fotos.push(new File([blob], `documento-eira-${n}.jpg`, { type: "image/jpeg" }));
   }
+  } finally {
+    await pdf.destroy();
+  }
   return fotos;
 }
 
 export default function EnviarBriar({ estudioId }: { estudioId: string }) {
   const [estado, setEstado] = useState("");
   const [fotos, setFotos] = useState<{ archivo: File; url: string }[]>([]);
+  const urls = useRef<string[]>([]);
+  useEffect(() => () => urls.current.forEach((u) => URL.revokeObjectURL(u)), []);
 
   // Paso 1: prepara la foto y la muestra. Paso 2 (otro toque): comparte, para que el menú se abra dentro del gesto de la usuaria.
   async function preparar() {
@@ -67,7 +75,9 @@ export default function EnviarBriar({ estudioId }: { estudioId: string }) {
       const r = await fetch("/api/portal/solicitar", { method: "POST", body: fd });
       const blob = await r.blob();
       if (!r.ok || blob.type !== "application/pdf") throw new Error("no disponible");
-      setFotos((await pdfAFotos(await blob.arrayBuffer())).map((archivo) => ({ archivo, url: URL.createObjectURL(archivo) })));
+      const listas = (await pdfAFotos(await blob.arrayBuffer())).map((archivo) => ({ archivo, url: URL.createObjectURL(archivo) }));
+      urls.current = listas.map((f) => f.url);
+      setFotos(listas);
       setEstado("");
     } catch {
       setEstado("No pudimos preparar el documento. Intenta de nuevo.");
