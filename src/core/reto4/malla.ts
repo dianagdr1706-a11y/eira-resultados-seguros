@@ -63,8 +63,10 @@ export function confirmarEntregaMalla(ctx: Ctx, d: { intentoId: number; portador
   const ya = (db().prepare("SELECT detalle FROM intentos_contacto WHERE estudio_id = ? AND canal = 'malla' AND estado = 'entregado'").all(i.estudio_id) as { detalle: string }[])
     .some((x) => (JSON.parse(x.detalle) as { intento_id: number }).intento_id === i.id);
   if (ya) throw new ErrorDominio("YA_ENTREGADO", "Este aviso ya tiene una entrega registrada", 409);
-  db().prepare("INSERT INTO intentos_contacto (estudio_id, canal, estado, detalle, creado_en) VALUES (?, 'malla', 'entregado', ?, ?)")
-    .run(i.estudio_id, JSON.stringify({ intento_id: i.id, portador, app: d.app }), nowIso());
-  audit(actorDe(ctx), "MALLA_ENTREGA_CONFIRMADA", i.estudio_id, { portador, app: d.app, ref: refDe(i.estudio_id) }, ctx.ip);
+  db().transaction(() => {
+    db().prepare("INSERT INTO intentos_contacto (estudio_id, canal, estado, detalle, creado_en) VALUES (?, 'malla', 'entregado', ?, ?)")
+      .run(i.estudio_id, JSON.stringify({ intento_id: i.id, portador, app: d.app }), nowIso());
+    audit(actorDe(ctx), "MALLA_ENTREGA_CONFIRMADA", i.estudio_id, { portador, app: d.app, ref: refDe(i.estudio_id) }, ctx.ip);
+  })();
   return { intento_id: i.id, ref: refDe(i.estudio_id) };
 }
