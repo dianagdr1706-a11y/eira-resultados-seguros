@@ -40,7 +40,8 @@ function mediosUsados(estudioId: string): Set<string> {
 
 function ultimoIntento(e: Estudio): string | null {
   const r = db().prepare("SELECT MAX(creado_en) AS t FROM intentos_contacto WHERE estudio_id = ? AND estado = 'enviado'").get(e.id) as { t: string | null };
-  return [r.t, e.notificado_en, e.autorizado_en].filter(Boolean).sort().pop() ?? null;
+  const n = db().prepare("SELECT MAX(creado_en) AS t FROM notificaciones WHERE estudio_id = ? AND estado = 'simulado'").get(e.id) as { t: string | null };
+  return [r.t, n.t, e.notificado_en, e.autorizado_en].filter(Boolean).sort().pop() ?? null;
 }
 
 /** Siguiente medio de la escalera que la paciente tiene y que aún no se ha usado. */
