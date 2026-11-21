@@ -4,6 +4,8 @@
  */
 import type { Ctx } from "@/core/permisos";
 import { ErrorDominio } from "@/core/errores";
+import { maskEmail, maskPhone } from "@/lib/ids";
+import type { Paciente } from "@/lib/db";
 import * as r1 from "@/core/reto1/expediente";
 import * as sync from "@/core/reto1/sincronizacion";
 import * as r4 from "@/core/reto4/estudios";
@@ -16,6 +18,14 @@ import { db, type Usuario } from "@/lib/db";
 import { audit } from "@/lib/audit";
 import { verifySecret } from "@/lib/ids";
 import { kv } from "@/lib/kv";
+
+/** Respuesta de alta/edición sin secretos ni contactos completos. */
+function pacientePublico(p: Paciente) {
+  const r: Partial<Paciente> = { ...p };
+  delete r.pin_hash;
+  delete r.pin_expira;
+  return { ...r, telefono: maskPhone(p.telefono), correo: maskEmail(p.correo), curp: p.curp ? `${p.curp.slice(0, 4)}••••••••••••••` : null };
+}
 import { ROLES } from "@/lib/estados";
 
 export type Peticion = {
@@ -59,10 +69,10 @@ export const RUTAS: Ruta[] = [
   { metodo: "POST", ruta: "/reto1/coincidencias", acceso: "personal", desc: "Posibles duplicados para unos datos (no modifica nada)", fn: (p) => ok(r1.buscarCoincidencias(c(p), p.body as never)) },
   { metodo: "POST", ruta: "/reto1/pacientes", acceso: "personal", desc: "Alta {datos, confirmacion?}; 409 REQUIERE_CONFIRMACION si hay parecidas", fn: (p) => {
     const r = r1.registrarPaciente(c(p), (p.body.datos ?? p.body) as never, p.body.confirmacion);
-    return ok(r, r.creada ? 201 : 200);
+    return ok({ ...r, paciente: pacientePublico(r.paciente) }, r.creada ? 201 : 200);
   } },
   { metodo: "GET", ruta: "/reto1/pacientes/:id", acceso: "personal", desc: "Expediente con historial de visitas, servicios y estudios", fn: (p) => ok(r1.obtenerExpediente(c(p), p.params.id)) },
-  { metodo: "PATCH", ruta: "/reto1/pacientes/:id", acceso: "personal", desc: "Edita {cambios, version_base}; 409 CONFLICTO_VERSION", fn: (p) => ok(r1.actualizarPaciente(c(p), p.params.id, p.body.cambios ?? {}, Number(p.body.version_base))) },
+  { metodo: "PATCH", ruta: "/reto1/pacientes/:id", acceso: "personal", desc: "Edita {cambios, version_base}; 409 CONFLICTO_VERSION", fn: (p) => ok(pacientePublico(r1.actualizarPaciente(c(p), p.params.id, p.body.cambios ?? {}, Number(p.body.version_base)))) },
   { metodo: "POST", ruta: "/reto1/pacientes/:id/visitas", acceso: "personal", desc: "Registra visita {fecha, sede, servicios[]}", fn: (p) => ok(r1.registrarVisita(c(p), { fecha: p.body.fecha, sede: p.body.sede, municipio: p.body.municipio, motivo: p.body.motivo, servicios: p.body.servicios ?? [], pacienteId: p.params.id, origen: "en_linea" }), 201) },
   { metodo: "POST", ruta: "/reto1/sync", acceso: "personal", desc: "Sincroniza lote offline {dispositivo, operaciones[]}", fn: (p) => ok(sync.sincronizarLote(c(p), p.body as never)) },
   { metodo: "GET", ruta: "/reto1/sync/pendientes", acceso: "personal", desc: "Operaciones offline que esperan decisión humana", fn: (p) => ok(sync.listarPendientesSync(c(p))) },
