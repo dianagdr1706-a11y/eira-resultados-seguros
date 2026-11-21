@@ -40,7 +40,7 @@ Guía para construir el front por separado. Cada sección indica **ruta**, **qui
 | `devuelto` | Devuelto a corrección | naranja |
 | `pendiente_clinica` | Por autorizar (Clínica) | violeta |
 | `autorizado_digital` | Autorizado: entrega digital | esmeralda |
-| `autorizado_acompanado` | Acompañamiento prioritario | rosa |
+| `autorizado_acompanado` | Autorizado: entrega acompañada (la prioridad se muestra aparte) | rosa |
 | `notificado` | Notificado sin consultar | ámbar |
 | `consultado` | Consultado / Descargado | verde |
 | `entregado_asistido` | Entregado (asistido) | verde azulado |

@@ -4,7 +4,7 @@ export const ESTADOS: Record<string, { label: string; color: string }> = {
   devuelto: { label: "Devuelto a corrección", color: "bg-orange-100 text-orange-800" },
   pendiente_clinica: { label: "Por autorizar (Clínica)", color: "bg-violet-100 text-violet-800" },
   autorizado_digital: { label: "Autorizado: entrega digital", color: "bg-emerald-100 text-emerald-800" },
-  autorizado_acompanado: { label: "Acompañamiento prioritario", color: "bg-rose-100 text-rose-800" },
+  autorizado_acompanado: { label: "Autorizado: entrega acompañada", color: "bg-rose-100 text-rose-800" },
   notificado: { label: "Notificado sin consultar", color: "bg-amber-100 text-amber-800" },
   consultado: { label: "Consultado / Descargado", color: "bg-green-100 text-green-800" },
   entregado_asistido: { label: "Entregado (asistido)", color: "bg-teal-100 text-teal-800" },
