@@ -1080,7 +1080,7 @@ function setTab(t,first){
 }
 $$('#seg button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
 $$('[data-tabgo]').forEach(b=>b.onclick=()=>setTab(b.dataset.tabgo));
-async function openCase(i){S.cur=i;S.cat=-1;S.mod=-1;S.checks=[0,0,0,0];S.pid=null;S.det=null;$('#psearch').value='';$('#pres').innerHTML='';$('#phom').textContent='';
+async function openCase(i){S.cur=i;S.cat=-1;S.mod=-1;S.checks=[0,0,0,0];S.pid=null;S.det=null;$('#psearch').value='';$('#pres').innerHTML='';$('#phom').textContent='';$('.st[data-st="1"] textarea').value='';$('#acuse').value='';
   try{S.det=await api('GET','/reto4/estudios/'+S.cases[i].id)}catch(e){toast(e.message);if(e.codigo==='SIN_PERMISO')return}
   setTab('estudio')}
 $('#openFirst').onclick=()=>{const i=S.cases.findIndex(c=>owner(c)===S.role);if(i>=0)openCase(i)};
