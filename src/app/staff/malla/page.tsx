@@ -14,8 +14,9 @@ export default async function Malla({ searchParams }: { searchParams: { error?: 
   const u = await requireStaff(["eira_admin"]);
   const h = headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
-  // Sin PORTAL_URL configurada, el aviso apunta al portal del mismo sitio para que el enlace abra de verdad.
-  const portal = process.env.PORTAL_URL || !host ? undefined : `${h.get("x-forwarded-proto") ?? "https"}://${host}/portal`;
+  // Sin PORTAL_URL configurada y con un host público, el aviso apunta al portal del mismo sitio para que el enlace abra de verdad.
+  const local = !host || /^(localhost|127\.|\[::1\])/.test(host);
+  const portal = process.env.PORTAL_URL || local ? undefined : `${h.get("x-forwarded-proto") ?? "https"}://${host}/portal`;
   const avisos = listarAvisosMalla({ usuario: u }, portal);
   const qrs = await Promise.all(avisos.map((a) => QRCode.toDataURL(a.mensaje, { margin: 1, width: 150 })));
   return (
