@@ -27,9 +27,20 @@ export const USUARIOS_DEMO = [
 export const DEMO_PASSWORD = "demo";
 
 let seeding: Promise<void> | null = null;
+let usuariosAlDia = false;
 
 export function ensureSeeded() {
-  if (getSetting("seeded") === "1") return Promise.resolve();
+  if (getSetting("seeded") === "1") {
+    if (!usuariosAlDia) {
+      // Bases sembradas antes de agregar un rol nuevo: crea las cuentas demo que falten.
+      for (const u of USUARIOS_DEMO)
+        if (!db().prepare("SELECT 1 FROM usuarios WHERE usuario = ?").get(u.usuario))
+          db().prepare("INSERT INTO usuarios (id, nombre, usuario, password_hash, rol, cedula) VALUES (?, ?, ?, ?, ?, ?)")
+            .run(newId("USR"), u.nombre, u.usuario, hashSecret(DEMO_PASSWORD), u.rol, u.cedula);
+      usuariosAlDia = true;
+    }
+    return Promise.resolve();
+  }
   if (!seeding)
     seeding = seed()
       .catch((err) => {
