@@ -551,7 +551,7 @@ body.calm #buga .av{animation:breathe 6s ease-in-out infinite}
   <nav class="nav n-home" aria-label="Inicio"><a href="#como" data-scroll>Cómo funciona</a><a href="#entrega" data-scroll>Entrega con cuidado</a><button class="pill" data-go="staff">Soy personal EIRA</button></nav>
   <nav class="nav n-portal" aria-label="Portal"><span class="crumb" id="crumb">Paso 1 de 4</span><button class="pill" data-go="home">Salir</button></nav>
   <nav class="nav n-staff" aria-label="Personal">
-    <div class="seg" role="tablist" id="seg"><button role="tab" data-tab="panel" aria-selected="true">Panel</button><button role="tab" data-tab="estudio" aria-selected="false">Estudio</button><button role="tab" data-tab="bitacora" aria-selected="false">Bitácora</button></div>
+    <div class="seg" role="tablist" id="seg"><button role="tab" data-tab="panel" aria-selected="true">Panel</button><button role="tab" data-tab="estudio" aria-selected="false">Estudio</button><button role="tab" data-tab="expediente" aria-selected="false">Expediente</button><button role="tab" data-tab="bitacora" aria-selected="false">Bitácora</button></div>
     <div class="roles" id="roles" aria-label="Rol"><button data-role="lab" aria-pressed="false">Laboratorio</button><button data-role="admin" aria-pressed="true">Admin</button><button data-role="medico" aria-pressed="false">Médico</button><button data-role="audit" aria-pressed="false">Auditoría</button></div>
     <button class="pill" data-go="home">Salir</button>
   </nav>
@@ -659,6 +659,7 @@ body.calm #buga .av{animation:breathe 6s ease-in-out infinite}
         <div class="meta"><span>Código de 6 dígitos</span><span>Vigencia 9:58 · 5 intentos</span></div>
         <div class="beads" id="beads"><i></i><i></i><i></i><i></i><i></i><i></i></div>
         <div class="keypad" id="keypad"></div>
+        <div class="hint" id="demohint" style="text-align:center">Prototipo: el SMS es simulado. El código aparece en <a href="/staff/bandeja" target="_blank" rel="noopener" style="text-decoration:underline">la bandeja simulada</a> (usuario admin, contraseña demo).</div>
         <button class="btn primary big" id="go3">Entrar <svg class="chev"><use href="#chev"/></svg></button>
       </div>
       <!-- paso 3 -->
@@ -725,21 +726,46 @@ body.calm #buga .av{animation:breathe 6s ease-in-out infinite}
           <div class="hint" id="turn" style="text-align:center"></div>
 
           <div class="st" data-st="0"><h3>Asocia con identidad comprobada</h3><p class="d">Marca las cuatro comprobaciones.</p>
+            <label class="search" style="margin-bottom:10px"><span class="sr">Buscar paciente</span><input id="psearch" type="search" placeholder="Buscar paciente por nombre o ID EIRA…" autocomplete="off"></label><div class="chips" id="pres" style="margin-bottom:8px"></div><div class="hint" id="phom" style="margin-bottom:12px"></div>
             <div id="checks"></div>
             <button class="btn primary big" id="adv0">Marcar listo y pasar al siguiente <svg class="chev"><use href="#chev"/></svg></button></div>
           <div class="st" data-st="1"><h3>Revisión administrativa</h3><p class="d">Deja una nota para la médica si hace falta.</p>
             <textarea aria-label="Comentarios" placeholder="Nota para el equipo médico (opcional)"></textarea>
             <button class="btn primary big" id="adv1">Aprobar y enviar a la médica <svg class="chev"><use href="#chev"/></svg></button>
-            <button class="btn ghost big" style="min-height:60px" data-tabgo="panel">Devolver con nota</button></div>
+            <button class="btn ghost big" style="min-height:60px" id="dev1">Devolver con nota</button></div>
           <div class="st" data-st="2"><h3>Autorización clínica</h3><p class="d">Elige la categoría Bethesda del informe.</p>
             <div class="chips" id="cats"></div>
             <div class="sem" id="sem"></div>
             <button class="auth" id="auth"><span class="rg"><i>✓</i></span><span>Mantén presionado para autorizar<small>Decisión clínica: requiere intención</small></span></button></div>
           <div class="st" data-st="3"><h3>Entrega asistida</h3><p class="d">¿Cómo se entregó o se va a entregar?</p>
             <div class="chips" id="mods"></div>
+            <textarea id="acuse" aria-label="Acuse" placeholder="Nombre de quien recibe (acuse)" style="min-height:60px;margin-top:12px;width:100%"></textarea>
             <button class="btn primary big" id="adv3">Registrar entrega <svg class="chev"><use href="#chev"/></svg></button></div>
           <div class="st" data-st="4"><div class="seal"><svg><use href="#seal"/></svg><div><b>Caso cerrado y sellado</b><span style="font-size:14px">Quedó registrado en la bitácora.</span></div></div>
             <button class="btn ghost big" style="min-height:60px" data-tabgo="bitacora">Ver la cadena</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- expediente (Reto 1) -->
+    <div class="stab spad" id="t-expediente">
+      <div class="study">
+        <div class="panel">
+          <div class="shead"><h2>Registro único</h2><span class="sp1"></span><button class="pill" id="offbtn" aria-pressed="false" style="min-height:40px;font-size:13px">Sin conexión: no</button></div>
+          <p class="d">Una paciente, un solo expediente. Si se parece a alguien, tú decides.</p>
+          <div class="field"><label for="rn">NOMBRE COMPLETO</label><input id="rn" type="text" autocomplete="off" style="font-size:20px"><i class="th"></i></div>
+          <div class="field" style="margin-top:10px"><label for="rf">FECHA DE NACIMIENTO</label><input id="rf" type="date" style="font-size:20px"><i class="th"></i></div>
+          <div class="field" style="margin-top:10px"><label for="rt">TELÉFONO (OPCIONAL)</label><input id="rt" type="tel" autocomplete="off" style="font-size:20px"><i class="th"></i></div>
+          <div class="field" style="margin:10px 0 14px"><label for="rm">MUNICIPIO</label><input id="rm" type="text" autocomplete="off" style="font-size:20px"><i class="th"></i></div>
+          <button class="btn primary big" id="rgo">Registrar paciente <svg class="chev"><use href="#chev"/></svg></button>
+          <div id="rcand" style="margin-top:14px"></div>
+          <div class="hint" id="rq" style="margin-top:12px"></div>
+          <button class="btn ghost big" id="rsync" style="min-height:56px;margin-top:8px;display:none">Sincronizar ahora</button>
+        </div>
+        <div class="panel">
+          <div class="shead"><h2 id="xt">Expediente</h2></div>
+          <label class="search" style="margin-bottom:10px"><span class="sr">Buscar expediente</span><input id="xsearch" type="search" placeholder="Buscar por nombre o ID EIRA…" autocomplete="off"></label><div class="chips" id="xres" style="margin-bottom:12px"></div>
+          <div id="xbody"><p class="d">Registra o busca una paciente para ver su historial.</p></div>
         </div>
       </div>
     </div>
@@ -799,13 +825,38 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function hx(s){let a=0x811c9dc5,b=5381;for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);a=Math.imul(a^c,16777619)>>>0;b=(Math.imul(b,33)^c)>>>0}return a.toString(16).padStart(8,'0')+b.toString(16).padStart(8,'0')}
 function mk(l){const o=[];let p='00000000';l.forEach((x,i)=>{const h=hx(p+x[0]+x[1]+i);o.push({n:i+1,action:x[0],actor:x[1],full:h,p:p.slice(0,8)});p=h});return o}
 const S={filter:'all',q:'',view:'home',ps:1,code:'',tab:'panel',role:'admin',cur:0,cat:-1,mod:-1,checks:[0,0,0,0],speaking:false,
-  cases:[{f:'PD-00348',n:'María G.',s:0},{f:'PD-00351',n:'Rosa H.',s:2},{f:'PD-00340',n:'Ana P.',s:3},{f:'PD-00355',n:'Lucía M.',s:0,lab:true}],
-  closed:0,
-  events:mk([['PDF cargado','Laboratorio'],['Paciente asociada','EIRA Admin'],['Revisión aprobada','EIRA Admin'],['Autorización clínica','Médico']])};
-const owner=c=>c.s>=4?'done':(c.lab&&c.s===0)?'lab':c.s===2?'medico':'admin';
+  cases:[],closed:0,events:[],alertas:[],pid:null,det:null,doc:null,acc:null};
+
+/* ---------- API real (/api/v1) ---------- */
+async function api(m,u,b){
+  const r=await fetch('/api/v1'+u,{method:m,credentials:'same-origin',headers:b?{'Content-Type':'application/json'}:{},body:b?JSON.stringify(b):undefined});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok){const e=new Error((j.error&&j.error.mensaje)||'No se pudo completar');e.codigo=j.error&&j.error.codigo;e.datos=j.error&&j.error.datos;throw e}
+  return j}
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const USR={lab:'laboratorio',admin:'admin',medico:'medico',audit:'auditoria'};
+const STG={cargado:0,devuelto:0,revision_admin:1,pendiente_clinica:2,autorizado_digital:3,autorizado_acompanado:3,notificado:3,consultado:4,entregado_asistido:4};
+const ini=n=>{const w=String(n||'?').trim().split(/\s+/);return (w[0][0]+(w[1]?w[1][0]:'')).toUpperCase()};
+function hace(iso){const m=(Date.now()-new Date(iso))/60000;return m<60?`hace ${Math.max(1,Math.round(m))} min`:m<1440?`hace ${Math.round(m/60)} h`:`hace ${Math.round(m/1440)} d`}
+async function cargar(){
+  try{const p=await api('GET','/reto4/panel');
+    S.cases=p.estudios.map(e=>({id:e.id,f:e.folio,n:e.paciente||e.id_eira||'Sin asociar',s:STG[e.estado]??0,estado:e.estado,prio:e.prioridad==='prioritario'&&STG[e.estado]===3,age:hace(e.creado_en)}));
+    S.closed=S.cases.filter(c=>c.s===4).length;S.alertas=p.alertas}
+  catch(e){toast(e.message)}
+  try{const b=await api('GET','/bitacora?limite=80');S.events=b.registros.reverse().map(r=>({n:r.id,action:r.accion,actor:r.actor_nombre||r.actor_tipo,full:r.hash,p:r.prev_hash.slice(0,8)}))}catch(e){S.events=[]}
+  renderAlertas()}
+async function entrarStaff(){
+  renderAll();setTab('panel',true);skeleton();
+  try{await api('POST','/auth/login',{usuario:USR[S.role],password:'demo'});await cargar()}catch(e){toast(e.message)}
+  renderAll();guide()}
+function renderAlertas(){
+  const T={asistida:['Tel','Asistida'],prioritario:['48h','Prioritario'],seguimiento:['7d','Seguimiento']},box=$('.t-alert');if(!box)return;
+  box.innerHTML='<h3>Seguimiento</h3>'+(S.alertas.length?S.alertas.slice(0,3).map((a,i)=>`<button class="al" data-al="${i}" style="--to:${[.78,.55,.3][i]}"><span class="rg"><i>${T[a.tipo][0]}</i></span><span><b>${T[a.tipo][1]} · ${esc(a.folio)}</b><span>${esc(a.texto)}</span></span></button>`).join(''):'<span style="align-self:center;color:var(--muted)">Sin alertas por ahora.</span>');
+  $$('[data-al]',box).forEach(b=>b.onclick=()=>{const i=S.cases.findIndex(c=>c.id===S.alertas[+b.dataset.al].estudio_id);if(i>=0)openCase(i)})}
+const owner=c=>c.s>=4?'done':c.s===2?'medico':'admin';
 const ownerName={lab:'Laboratorio',admin:'EIRA Admin',medico:'Médica',audit:'Auditoría',done:'—'};
 const STATE=[['Pendiente identidad','a','▲'],['Revisión admin','n','●'],['Revisión médica','p','◆'],['Resultado listo','g','✓'],['Entregado','v','✓']];
-const stateOf=c=>(c.lab&&c.s===0)?['Recibido','n','●']:STATE[c.s];
+const stateOf=c=>STATE[c.s];
 
 /* ---------- guía ---------- */
 const bub=$('#bub'),buga=$('#buga');
@@ -816,7 +867,8 @@ function gtext(){
   const n=S.cases.filter(c=>owner(c)===S.role).length;
   if(S.tab==='panel')return S.role==='audit'?'La cadena está íntegra. Puedes verificarla cuando quieras.':`Buen día. Tienes ${n} ${n===1?'caso':'casos'} para hoy.`;
   if(S.tab==='bitacora')return'Cada paso se enlaza con el anterior. Verifica la cadena cuando quieras.';
-  const c=S.cases[S.cur];return['Marca las cuatro comprobaciones para asociar la identidad.','Revisa y envía a la médica con una nota si hace falta.','Elige la categoría y mantén presionado para autorizar.','Registra cómo se entrega. Con cariño.','Listo. Quedó sellado en la bitácora. Gracias por cuidar.'][c.s];
+  if(S.tab==='expediente')return'Una paciente, un solo expediente. Si se parece a alguien, tú decides.';
+  const c=S.cases[S.cur];if(!c)return'Elige un caso del panel.';return['Busca a la paciente y marca las cuatro comprobaciones para asociar la identidad.','Revisa y envía a la médica con una nota si hace falta.','Elige la categoría y mantén presionado para autorizar.','Registra cómo se entrega. Con cariño.','Listo. Quedó sellado en la bitácora. Gracias por cuidar.'][c.s];
 }
 function guide(){say(gtext())}
 function speak(t){
@@ -829,13 +881,14 @@ $('#say').onclick=()=>speak(gtext());
 /* ---------- vistas ---------- */
 function go(v){
   if(v===S.view)return;
+  if(S.view==='portal')api('POST','/reto4/portal/salir').catch(()=>{});
   const cur=$('.view.on'),nx=$('#v-'+v);
   S.view=v;document.body.dataset.view=v;
   cur.classList.add('out');setTimeout(()=>cur.classList.remove('on','out'),420);
   nx.classList.add('on','in');requestAnimationFrame(()=>requestAnimationFrame(()=>nx.classList.remove('in')));
   window.scrollTo({top:0,behavior:'instant'});
   if(v==='portal'){setPS(1,true)}else{document.body.classList.remove('calm')}
-  if(v==='staff'){renderAll();setTab('panel',true);skeleton()}
+  if(v==='staff')entrarStaff();
   guide();
 }
 $$('[data-go]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();go(b.dataset.go)}));
@@ -951,33 +1004,59 @@ function setPS(n,first){
 }
 const kp=$('#keypad');['1','2','3','4','5','6','7','8','9','⌫','0','OK'].forEach(k=>{const b=document.createElement('button');b.type='button';b.textContent=k;b.setAttribute('aria-label',k==='⌫'?'Borrar':k==='OK'?'Confirmar':k);b.onclick=()=>key(k);kp.appendChild(b)});
 function renderBeads(){$$('#beads i').forEach((b,i)=>b.classList.toggle('on',i<S.code.length))}
-function key(k){if(S.ps!==2)return;if(k==='⌫')S.code=S.code.slice(0,-1);else if(k==='OK'){setPS(3);return}else if(S.code.length<6)S.code+=k;renderBeads();if(S.code.length===6)setTimeout(()=>{if(S.ps===2)setPS(3)},800)}
+function key(k){if(S.ps!==2)return;if(k==='⌫')S.code=S.code.slice(0,-1);else if(k==='OK'){paso2();return}else if(S.code.length<6)S.code+=k;renderBeads();if(S.code.length===6)setTimeout(()=>{if(S.ps===2&&S.code.length===6)paso2()},500)}
 document.addEventListener('keydown',e=>{if(S.view!=='portal'||S.ps!==2)return;if(/^\d$/.test(e.key))key(e.key);if(e.key==='Backspace')key('⌫')});
-$('#go2').onclick=()=>setPS(2);$('#go3').onclick=()=>setPS(3);
+async function paso1(){
+  const folio=$('#folio').value.trim(),dob=$('#dob').value,m=($('#metodo .opt[aria-pressed=true]')||{dataset:{m:'otp'}}).dataset.m;
+  if(!folio||!dob){toast('Escribe tu folio y tu fecha de nacimiento');return}
+  S.acc={folio,dob,m};$('#demohint').style.display=m==='pin'?'none':'';
+  if(m==='pin'){PT[2][1]='Escribe el PIN de 6 dígitos de tu talón.';setPS(2);return}
+  try{const r=await api('POST','/reto4/portal/acceso',{folio,fecha_nacimiento:dob,metodo:'otp'});
+    PT[2][1]=`Enviamos un código a ${r.destino} por ${r.canal==='correo'?'correo':'SMS'}.`;setPS(2)}
+  catch(e){toast(e.message)}}
+let p2=false;
+async function paso2(){
+  if(p2)return;if(S.code.length<6){toast('Faltan dígitos');return}p2=true;
+  try{
+    if(S.acc&&S.acc.m==='pin')await api('POST','/reto4/portal/acceso',{folio:S.acc.folio,fecha_nacimiento:S.acc.dob,metodo:'pin',pin:S.code});
+    else await api('POST','/reto4/portal/otp',{codigo:S.code});
+    const d=await api('GET','/reto4/portal/documentos');S.pac=d.paciente;S.doc=d.documentos.find(x=>x.descargable)||d.documentos[0]||null;
+    $('.env .fol').textContent=d.paciente.id_eira;
+    $('.env .top').nextElementSibling.textContent=S.doc?`Toma: ${S.doc.fecha_toma||'—'} · ${S.doc.sede||''}`:'Aún no hay un documento autorizado.';
+    $('.env .badge').textContent=!S.doc?'EN REVISIÓN':S.doc.descargable?'✓ LISTO PARA TI':'ENTREGA EN PERSONA';
+    setPS(3)}
+  catch(e){toast(e.message);S.code='';renderBeads()}
+  p2=false}
+$('#go2').onclick=paso1;$('#go3').onclick=paso2;
 $$('#metodo .opt').forEach(b=>b.onclick=()=>{$$('#metodo .opt').forEach(x=>x.setAttribute('aria-pressed','false'));b.setAttribute('aria-pressed','true')});
 ['folio','dob'].forEach((id,i)=>$('#'+id).addEventListener('input',e=>$('#f'+(i+1)).classList.toggle('ok',!!e.target.value)));
-bindHold($('#hold1'),900,()=>setPS(4));
+bindHold($('#hold1'),900,async()=>{
+  const d=S.doc;if(!d){toast('Aún no hay un documento listo');return}
+  if(!d.descargable){toast('Queremos entregártelo en persona');openSheet('cita-sheet');return}
+  try{const r=await api('POST',`/reto4/portal/documentos/${d.id}/enlace`);const v=$('#viewer1');v._apply=null;
+    v.innerHTML=`<iframe src="${r.url}" title="Tu documento" style="width:100%;height:70vh;min-height:420px;border:0;border-radius:18px;background:#fff"></iframe><div class="vhint">Este enlace dura 2 minutos y solo funciona con tu sesión.</div>`;setPS(4)}
+  catch(e){toast(e.message)}});
 const wv=$('#wv');for(let i=0;i<28;i++){const e=document.createElement('i');e.style.setProperty('--h',(8+Math.abs(Math.sin(i*.7))*24)+'px');e.style.setProperty('--i',i);wv.appendChild(e)}
-$('#voice button').onclick=()=>{const v=$('#voice');v.classList.add('play');speak('Hola, María. Tu documento está listo. Puedes abrirlo cuando quieras. Si tienes dudas, EIRA te acompaña. Con amor.');setTimeout(()=>v.classList.remove('play'),6000)};
+$('#voice button').onclick=()=>{const v=$('#voice');v.classList.add('play');speak('Hola'+(S.pac?', '+S.pac.nombre:'')+'. Tu documento está listo. Puedes abrirlo cuando quieras. Si tienes dudas, EIRA te acompaña. Con amor.');setTimeout(()=>v.classList.remove('play'),6000)};
 
 /* ---------- STAFF ---------- */
 function badge(c){const s=stateOf(c);return `<span class="badge ${s[1]}">${s[2]} ${s[0].toUpperCase()}</span>`}
-const AGE=['hace 2 h','hace 1 d','hace 3 d','hace 40 min'];
+
 function renderQueue(){
   const q=$('#queue');q.innerHTML='';let n=0;const term=(S.q||'').toLowerCase().trim();
   S.cases.forEach((c,i)=>{const o=owner(c);if(o==='done')return;const mine=o===S.role;
     if(S.filter==='mine'&&!mine)return;if(S.filter==='wait'&&mine)return;
     if(term&&!(c.n+' '+c.f).toLowerCase().includes(term))return;
     const el=document.createElement('div');el.className='q qin';el.style.animationDelay=(n++*80)+'ms';
-    const prio=c.f==='PD-00340'&&c.s===3?'<span class="prio"><i></i>Prioritario</span>':'';
-    el.innerHTML=`<div class="av">${c.n[0]}${c.n.split(' ')[1][0]}</div><div class="who"><b>${c.n}</b><span class="mono">${c.f}</span> · le toca a ${ownerName[o]}<div class="age">${AGE[i]||''}</div></div>${prio}${badge(c)}<button class="btn ${mine?'primary':'ghost'}">${mine?['Asociar','Revisar','Autorizar','Entregar'][c.s]+' →':'Ver'}</button>`;
+    const prio=c.prio?'<span class="prio"><i></i>Prioritario</span>':'';
+    el.innerHTML=`<div class="av">${esc(ini(c.n))}</div><div class="who"><b>${esc(c.n)}</b><span class="mono">${esc(c.f)}</span> · le toca a ${ownerName[o]}<div class="age">${c.age||''}</div></div>${prio}${badge(c)}<button class="btn ${mine?'primary':'ghost'}">${mine?['Asociar','Revisar','Autorizar','Entregar'][c.s]+' →':'Ver'}</button>`;
     el.querySelector('button').onclick=()=>openCase(i);q.appendChild(el)});
   if(!q.children.length)q.innerHTML='<div style="padding:30px;text-align:center;font-style:italic;color:var(--muted)">Nada por aquí. Gracias por cuidar.</div>';
 }
 function skeleton(){const q=$('#queue');q.innerHTML='<div class="q sk"><div class="av" style="width:48px;height:48px;border-radius:50%"></div><div class="who"><div class="l1"></div><div class="l2"></div></div><div class="l3"></div></div>'.repeat(3);setTimeout(()=>{if(S.view==='staff'&&S.tab==='panel')renderQueue()},750)}
 $('#qs').addEventListener('input',e=>{S.q=e.target.value;renderQueue()});
 $$('#fchips button').forEach(b=>b.onclick=()=>{S.filter=b.dataset.f;$$('#fchips button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderQueue()});
-$('#al1').onclick=()=>openCase(2);
+
 function renderFeed(){
   $('#feed').innerHTML=S.events.slice(-4).reverse().map(e=>`<li class="${e.fresh?'fresh':''}"><b>${e.action}</b><span>${e.actor}</span><div class="mono">${e.full.slice(0,4)} ${e.full.slice(4,8)}…</div></li>`).join('');
   S.events.forEach(e=>e.fresh=false)}
@@ -987,11 +1066,11 @@ function renderPanel(){
   const mine=S.cases.filter(c=>owner(c)===S.role),act=S.cases.filter(c=>owner(c)!=='done');
   const n=mine.length;
   $('#hh').innerHTML=S.role==='audit'?'Buen día. La cadena está <em>íntegra</em>.':S.role==='lab'?`Buen día. Hay ${n} PDF por <em>asociar</em>.`:S.role==='medico'?`Buen día, Dra. Hay ${n} ${n===1?'caso':'casos'} esperando tu <em>autorización</em>.`:`Buen día. Hay ${n} ${n===1?'caso':'casos'} esperando tu <em>revisión</em>.`;
-  countTo($('#k1'),n);countTo($('#k2'),act.length-n);countTo($('#k3'),28+S.closed);
+  countTo($('#k1'),n);countTo($('#k2'),act.length-n);countTo($('#k3'),S.closed);
   $('#openFirst').style.display=n?'':'none';renderQueue();renderFeed();
 }
 function renderAll(){renderPanel();renderChain();renderStudy()}
-$$('#roles button').forEach(b=>b.onclick=()=>{S.role=b.dataset.role;$$('#roles button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderPanel();renderStudy();guide()});
+$$('#roles button').forEach(b=>b.onclick=async()=>{S.role=b.dataset.role;$$('#roles button').forEach(x=>x.setAttribute('aria-pressed',x===b));try{await api('POST','/auth/login',{usuario:USR[S.role],password:'demo'});await cargar()}catch(e){toast(e.message)}renderPanel();renderChain();renderStudy();guide()});
 function setTab(t,first){
   const cur=$('.stab.on'),nx=$('#t-'+t);S.tab=t;
   $$('#seg button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
@@ -1001,12 +1080,15 @@ function setTab(t,first){
 }
 $$('#seg button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
 $$('[data-tabgo]').forEach(b=>b.onclick=()=>setTab(b.dataset.tabgo));
-function openCase(i){S.cur=i;S.cat=-1;S.mod=-1;S.checks=[0,0,0,0];setTab('estudio')}
+async function openCase(i){S.cur=i;S.cat=-1;S.mod=-1;S.checks=[0,0,0,0];S.pid=null;S.det=null;$('#psearch').value='';$('#pres').innerHTML='';$('#phom').textContent='';
+  try{S.det=await api('GET','/reto4/estudios/'+S.cases[i].id)}catch(e){toast(e.message);if(e.codigo==='SIN_PERMISO')return}
+  setTab('estudio')}
 $('#openFirst').onclick=()=>{const i=S.cases.findIndex(c=>owner(c)===S.role);if(i>=0)openCase(i)};
 $('#hsay').onclick=()=>speak($('#hh').textContent);
 
 const CHK=['Nombre coincide con el informe','Fecha de nacimiento coincide','Folio de muestra coincide','El PDF es legible'];
-const CAT=[['Negativa',0],['ASC-US',1],['LSIL',1],['Muestra inadecuada',1],['ASC-H',2],['HSIL',2],['AGC',2]];
+const CAT=[['Negativa',0,'1'],['ASC-US',1,'2'],['LSIL',1,'4'],['Muestra inadecuada',1,'INAD'],['ASC-H',2,'3'],['HSIL',2,'5'],['AGC',2,'9']];
+const MODK=['presencial_eira','jornada','centro_salud','llamada_seguimiento'];
 const SEM=[{k:'g',w:'Normal',s:'entrega digital',svg:'<circle cx="24" cy="24" r="21" fill="#2E7D43"/><path d="M14 25l7 7 13-15" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>'},
  {k:'y',w:'Atención',s:'entrega acompañada (7 días)',svg:'<path d="M24 4L45 41H3z" fill="#B97A00" stroke="#B97A00" stroke-width="3" stroke-linejoin="round"/><path d="M24 18v12M24 35v.5" stroke="#fff" stroke-width="5" stroke-linecap="round"/>'},
  {k:'r',w:'Urgente',s:'entrega acompañada prioritaria (48 h)',svg:'<path d="M16 3h16l13 13v16L32 45H16L3 32V16z" fill="#C62828"/><path d="M17 17l14 14M31 17L17 31" stroke="#fff" stroke-width="5" stroke-linecap="round"/>'}];
@@ -1017,14 +1099,15 @@ const mods=$('#mods');MOD.forEach((m,i)=>{const b=document.createElement('button
 function renderStudy(soft,reveal){
   const c=S.cases[S.cur];if(!c)return;
   $('#sf').textContent=c.f;$('#sbadge').outerHTML=`<span class="badge ${stateOf(c)[1]}" id="sbadge">${stateOf(c)[2]} ${stateOf(c)[0].toUpperCase()}</span>`;
-  $('#pm').innerHTML=`<span>Paciente: <b>${c.n}</b></span><span>ID EIRA-00348</span><span>Contacto: <b>•••• •• 4321</b> · m•••@example.com</span>`;
-  const v=$('#viewer2');if(!soft||!v.children.length)viewer(v,c.f,c.n);
+  const dp=S.det&&S.det.paciente,dd=S.det&&S.det.documento;
+  $('#pm').innerHTML=dp?`<span>Paciente: <b>${esc(dp.nombre)}</b></span><span>${esc(dp.id_eira)} · ${esc(dp.fecha_nacimiento)}</span><span>Contacto: <b>${esc(dp.telefono)}</b> · ${esc(dp.correo)}</span>`:'<span>Sin paciente asociada todavía</span>';
+  const v=$('#viewer2');if(!soft)v.innerHTML=dd?`<iframe src="${dd.url}" title="PDF del estudio" style="width:100%;height:560px;border:0;border-radius:18px;background:#fff"></iframe><div class="vhint mono">SHA-256 ${dd.sha256.slice(0,24)}…</div>`:'<div class="vhint">Tu rol no ve el documento.</div>';
   const sc=Math.min(c.s,4);$$('#stepper .s').forEach((s,i)=>{s.classList.toggle('done',c.s>i);s.classList.toggle('on',c.s===i)});
   $('#stepper .fill').style.width=`calc((100% - 48px) * ${Math.min(c.s,3)/3})`;
   const o=owner(c);$('#turn').textContent=o==='done'?'Caso cerrado':`Le toca a ${ownerName[o]}${o===S.role?' · eres tú':''}`;
   $$('.st').forEach(s=>s.classList.toggle('on',+s.dataset.st===sc));
   $$('#checks .chk').forEach((b,i)=>b.setAttribute('aria-pressed',S.checks[i]?'true':'false'));
-  $('#adv0').classList.toggle('dis',!S.checks.every(Boolean));
+  $('#adv0').classList.toggle('dis',!S.checks.every(Boolean)||!S.pid);
   $$('#cats .chp').forEach((b,i)=>b.setAttribute('aria-pressed',i===S.cat?'true':'false'));
   $$('#mods .chp').forEach((b,i)=>b.setAttribute('aria-pressed',i===S.mod?'true':'false'));
   const sem=$('#sem');if(S.cat>=0){const m=SEM[CAT[S.cat][1]];sem.className=`sem on ${m.k}`;
@@ -1033,25 +1116,89 @@ function renderStudy(soft,reveal){
   $('#auth').classList.toggle('dis',S.cat<0);$('#adv3').classList.toggle('dis',S.mod<0);
   if(!soft)guide();
 }
-function advance(){
-  const c=S.cases[S.cur];const L=['Paciente asociada con identidad comprobada','Revisión administrativa aprobada','Entrega autorizada por la médica','Entrega registrada'],A=['EIRA Admin','EIRA Admin','Médica','EIRA Admin'];
-  const last=S.events[S.events.length-1],h=hx(last.full+L[c.s]+A[c.s]+S.events.length);
-  S.events.push({n:S.events.length+1,action:L[c.s],actor:A[c.s],full:h,p:last.full.slice(0,8),fresh:true});
-  c.s++;c.lab=false;if(c.s===4)S.closed++;S.cat=-1;S.mod=-1;S.checks=[0,0,0,0];
-  renderStudy(true);renderChain();renderFeed();toast('Registrado en la bitácora');guide();
+let adv=false;
+async function advance(){
+  const c=S.cases[S.cur];if(!c||adv)return;const id=c.id,st=c.s;adv=true;
+  try{
+    if(st===0)await api('POST',`/reto4/estudios/${id}/asociar`,{paciente_id:S.pid,checklist:['nombre','fecha_nacimiento','folio','legible']});
+    else if(st===1)await api('POST',`/reto4/estudios/${id}/revision`,{decision:'aprobar',comentarios:$('.st[data-st="1"] textarea').value});
+    else if(st===2){const k=CAT[S.cat],r=await api('POST',`/reto4/estudios/${id}/autorizacion`,{decision:k[1]===0?'digital':'acompanado',bethesda:k[2]});
+      toast(r.notificacion?`Autorizado. Aviso neutro enviado por ${r.notificacion.canal}`:'Autorizado. Sin canal digital: entrega asistida')}
+    else if(st===3)await api('POST',`/reto4/estudios/${id}/entrega`,{modalidad:MODK[S.mod],resultado:'entregado',identidad_verificada:true,acuse:$('#acuse').value.trim()});
+  }catch(e){toast(e.message);adv=false;return}
+  S.cat=-1;S.mod=-1;S.checks=[0,0,0,0];S.pid=null;$('#acuse').value='';
+  await cargar();const i=S.cases.findIndex(x=>x.id===id);if(i>=0)S.cur=i;
+  try{S.det=await api('GET','/reto4/estudios/'+id)}catch(e){}
+  if(S.events.length)S.events[S.events.length-1].fresh=true;
+  renderStudy();renderChain();renderFeed();if(st!==2)toast('Registrado en la bitácora');guide();adv=false;
 }
-$('#adv0').onclick=()=>{if(S.checks.every(Boolean))advance()};$('#adv1').onclick=advance;$('#adv3').onclick=()=>{if(S.mod>=0)advance()};
+let pst;
+$('#psearch').addEventListener('input',e=>{clearTimeout(pst);const q=e.target.value;pst=setTimeout(async()=>{
+  let rs=[];try{rs=q.trim().length>1?await api('GET','/reto1/pacientes?q='+encodeURIComponent(q)):[]}catch(er){toast(er.message)}
+  const box=$('#pres');box.innerHTML=rs.map(p=>`<button type="button" class="chp" aria-pressed="${p.id===S.pid}" data-pid="${p.id}">${esc(p.nombre)} · ${esc(p.fecha_nacimiento)} · ${esc(p.id_eira)}</button>`).join('');
+  const nombres=rs.map(p=>p.nombre.toLowerCase());$('#phom').textContent=nombres.some((n,i)=>nombres.indexOf(n)!==i)?'Hay pacientes con el mismo nombre: confirma con la fecha de nacimiento y el ID EIRA.':'';
+  $$('[data-pid]',box).forEach(b=>b.onclick=()=>{S.pid=b.dataset.pid;$$('[data-pid]',box).forEach(x=>x.setAttribute('aria-pressed',x===b));renderStudy(true)})},250)});
+$('#dev1').onclick=async()=>{const c=S.cases[S.cur],t=$('.st[data-st="1"] textarea').value.trim();if(!c)return;if(!t){toast('Escribe la nota para devolver');return}
+  try{await api('POST',`/reto4/estudios/${c.id}/revision`,{decision:'devolver',comentarios:t});await cargar();toast('Devuelto con nota');setTab('panel')}catch(e){toast(e.message)}};
+$('#adv0').onclick=()=>{if(!S.pid){toast('Elige primero a la paciente');return}if(S.checks.every(Boolean))advance()};$('#adv1').onclick=advance;$('#adv3').onclick=()=>{if(S.mod<0)return;if(!$('#acuse').value.trim()){toast('Escribe el nombre de quien recibe');return}advance()};
 bindHold($('#auth'),800,advance,()=>{if(S.cat<0){toast('Elige primero la categoría');return false}return true});
 
 let vt;
-$('#verify').onclick=()=>{clearInterval(vt);$('#sealbox').classList.remove('on');$('#warn').classList.remove('on');
+$('#verify').onclick=async()=>{clearInterval(vt);$('#sealbox').classList.remove('on');$('#warn').classList.remove('on');
+  let v;try{v=await api('GET','/bitacora/integridad')}catch(e){toast(e.message);return}
   const ls=$$('#chain .link');ls.forEach(l=>l.classList.remove('lit'));let i=0;
-  vt=setInterval(()=>{if(i>=ls.length){clearInterval(vt);$('#sealn').textContent=`${ls.length} registros verificados`;$('#sealbox').classList.add('on');return}
-    ls[i].classList.add('lit');ls[i].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});i++},430)};
-$('#tamper').onclick=()=>{$('#sealbox').classList.remove('on');const w=$('#warn');w.classList.add('on');setTimeout(()=>w.classList.remove('on'),3800)};
+  vt=setInterval(()=>{if(i>=ls.length){clearInterval(vt);$('#sealn').textContent=`${v.total} registros verificados en el servidor (SHA-256)`;$('#sealbox b').textContent=v.ok?'Cadena íntegra':`Cadena rota en el registro ${v.rotoEn}`;$('#sealbox').classList.add('on');return}
+    ls[i].classList.add('lit');ls[i].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});i++},Math.max(40,Math.min(430,3000/Math.max(1,ls.length))))};
+$('#tamper').onclick=async()=>{$('#sealbox').classList.remove('on');const w=$('#warn');
+  try{const r=await api('POST','/bitacora/intento-alteracion');w.textContent=r.rechazado?r.mensaje+'. Los registros no se pueden modificar.':r.mensaje;w.classList.add('on');setTimeout(()=>w.classList.remove('on'),4200);await cargar();renderChain()}catch(e){toast(e.message)}};
+
+/* ---------- EXPEDIENTE (Reto 1) ---------- */
+const Q=()=>JSON.parse(localStorage.getItem('padi_cola')||'[]'),setQ=q=>{localStorage.setItem('padi_cola',JSON.stringify(q));renderQ()};
+const uid=()=>(crypto.randomUUID?crypto.randomUUID():'op-'+Date.now()+'-'+Math.random().toString(16).slice(2));
+const hoy=()=>new Date().toISOString().slice(0,10);
+let OFF=false;
+function renderQ(){const n=Q().length;$('#rq').textContent=n?`${n} ${n===1?'captura guardada':'capturas guardadas'} en este dispositivo, sin enviar.`:'';$('#rsync').style.display=n&&!OFF?'':'none'}
+$('#offbtn').onclick=()=>{OFF=!OFF;$('#offbtn').textContent='Sin conexión: '+(OFF?'sí':'no');$('#offbtn').setAttribute('aria-pressed',OFF);toast(OFF?'Modo sin conexión (simulado): se guarda en este dispositivo':'De vuelta en línea');renderQ()};
+const datosR=()=>({nombre:$('#rn').value.trim(),fecha_nacimiento:$('#rf').value,telefono:$('#rt').value.trim()||null,municipio:$('#rm').value.trim()||null});
+async function registrar(conf){
+  const d=datosR();if(!d.nombre||!d.fecha_nacimiento){toast('Escribe nombre y fecha de nacimiento');return}
+  if(OFF){const t='tmp-'+Date.now();setQ([...Q(),{op_id:uid(),tipo:'alta_paciente',capturado_en:new Date().toISOString(),datos:{...d,temp_id:t}},{op_id:uid(),tipo:'visita',capturado_en:new Date().toISOString(),datos:{paciente_ref:t,fecha:hoy(),sede:'Jornada (sin conexión)',servicios:[{tipo:'papanicolaou'}]}}]);$('#rcand').innerHTML='';toast('Guardado sin conexión');return}
+  try{const r=await api('POST','/reto1/pacientes',{datos:d,confirmacion:conf});$('#rcand').innerHTML='';toast(r.creada?`Registrada: ${r.paciente.id_eira}`:`Es la misma paciente: ${r.paciente.id_eira}`);verExp(r.paciente.id)}
+  catch(e){if(e.codigo==='REQUIERE_CONFIRMACION')renderCand(e.datos.candidatas);else toast(e.message)}}
+function renderCand(cs){
+  const b=$('#rcand');
+  b.innerHTML=`<div class="sem on y" style="margin-bottom:10px"><div><b>Se parece a ${cs.length===1?'un expediente':cs.length+' expedientes'}</b><span>No se registró nada. Decide tú: ¿es la misma persona?</span></div></div>`+
+    cs.map((c,i)=>`<div class="q" style="margin-bottom:8px"><div class="who"><b>${esc(c.paciente.nombre)}</b><span class="mono">${esc(c.paciente.id_eira)}</span> · ${esc(c.paciente.fecha_nacimiento)} · parecido ${c.puntaje}%<div class="age">${esc(c.razones.join(' · '))}</div></div><button class="btn primary" data-same="${i}">Es ella</button></div>`).join('')+
+    `<textarea id="rmot" aria-label="Motivo" placeholder="Si es otra persona, escribe por qué (obligatorio)" style="width:100%;min-height:60px"></textarea><button class="btn ghost big" id="rnew" style="min-height:56px;margin-top:8px">Es otra persona: registrar nueva</button>`;
+  $$('[data-same]',b).forEach(x=>x.onclick=()=>registrar({decision:'existente',pacienteId:cs[+x.dataset.same].paciente.id}));
+  $('#rnew').onclick=()=>registrar({decision:'nueva',motivo:$('#rmot').value})}
+$('#rgo').onclick=()=>registrar();
+const SRV=[['papanicolaou','Papanicolaou'],['exploracion_mamaria','Exploración mamaria'],['mastografia','Mastografía'],['vph','VPH'],['orientacion','Orientación']];
+const srvN=t=>(SRV.find(x=>x[0]===t)||[t,t])[1];
+async function verExp(id){
+  let X;try{X=await api('GET','/reto1/pacientes/'+id)}catch(e){toast(e.message);return}
+  const p=X.paciente;$('#xt').textContent=p.id_eira;
+  $('#xbody').innerHTML=`<div class="pm" style="margin-bottom:14px"><span>Paciente: <b>${esc(p.nombre)}</b></span><span>Nació: ${esc(p.fecha_nacimiento)}${p.municipio?' · '+esc(p.municipio):''}</span><span>Contacto: <b>${esc(p.telefono||'—')}</b></span></div><p class="d">${X.resumen.visitas} ${X.resumen.visitas===1?'visita':'visitas'} · ${X.resumen.servicios} servicios · ${X.resumen.estudios} estudios</p>`+
+    X.visitas.map(v=>`<div class="q" style="margin-bottom:8px"><div class="who"><b>${esc(v.fecha)} · ${esc(v.sede||'Sin sede')}</b>${esc(v.servicios.map(s=>srvN(s.tipo)).join(', '))}<div class="age">${v.origen==='offline'?'Capturada sin conexión':'Capturada en línea'}</div></div></div>`).join('')+
+    X.estudios.map(e=>`<div class="q" style="margin-bottom:8px"><div class="who"><b>Papanicolaou ${esc(e.folio)}</b><span class="mono">${esc(e.estado)}</span></div></div>`).join('')+
+    `<h3 style="margin:18px 0 8px">Nueva visita</h3><div class="chips" id="xsrv">${SRV.map(s=>`<button type="button" class="chp" aria-pressed="false" data-s="${s[0]}">${s[1]}</button>`).join('')}</div><button class="btn primary big" id="xgo" style="margin-top:12px">Registrar visita de hoy</button>`;
+  $$('#xsrv .chp').forEach(b=>b.onclick=()=>b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true'));
+  $('#xgo').onclick=async()=>{const sv=$$('#xsrv .chp[aria-pressed=true]').map(b=>({tipo:b.dataset.s}));if(!sv.length){toast('Elige al menos un servicio');return}
+    try{await api('POST',`/reto1/pacientes/${p.id}/visitas`,{fecha:hoy(),sede:'Jornada EIRA',servicios:sv});toast('Visita registrada');verExp(p.id)}catch(e){toast(e.message)}}}
+let xst;
+$('#xsearch').addEventListener('input',e=>{clearTimeout(xst);const q=e.target.value;xst=setTimeout(async()=>{
+  let rs=[];try{rs=q.trim().length>1?await api('GET','/reto1/pacientes?q='+encodeURIComponent(q)):[]}catch(er){toast(er.message)}
+  $('#xres').innerHTML=rs.map(p=>`<button type="button" class="chp" data-xp="${p.id}">${esc(p.nombre)} · ${esc(p.fecha_nacimiento)} · ${esc(p.id_eira)}</button>`).join('');
+  $$('[data-xp]').forEach(b=>b.onclick=()=>verExp(b.dataset.xp))},250)});
+$('#rsync').onclick=async()=>{
+  try{const r=await api('POST','/reto1/sync',{dispositivo:'padi-navegador',operaciones:Q()});setQ([]);
+    $('#rcand').innerHTML=`<div class="sem on g"><div><b>Sincronizado</b><span>${esc(Object.entries(r.resumen).map(([k,v])=>`${v} ${k.replace(/_/g,' ')}`).join(' · '))}. Lo que se parece a otro expediente espera la decisión de administración.</span></div></div>`;
+    const a=r.resultados.find(x=>x.estado==='aplicada'&&x.detalle&&x.detalle.id_eira);if(a)verExp(a.resultado_id)}
+  catch(e){toast(e.message)}};
+renderQ();
 
 /* ---------- arranque ---------- */
-viewer($('#viewer1'),'EIRA-00348','María G.');
+viewer($('#viewer1'),'EIRA-00000','');
 mag();tilt();guide();
 function enter(){const i=$('#intro');if(!i||i.classList.contains('go'))return;i.classList.add('go');document.body.classList.add('ready');setTimeout(()=>i.remove(),1500);
   $$('#v-home [data-r]').forEach(el=>{const r=el.getBoundingClientRect();if(r.top<innerHeight)el.classList.add('vis')})}
