@@ -43,8 +43,8 @@ export async function leerLlavero(token: string, ip?: string | null): Promise<{ 
   const hay = (...x: string[]) => es.some((e) => x.includes(e.estado));
   const estado: EstadoLlavero = hay("autorizado_digital", "notificado") ? "listo"
     : hay("autorizado_acompanado") ? "entrega_en_persona"
-    : hay("cargado", "revision_admin", "pendiente_clinica", "devuelto") ? "en_proceso"
-    : hay("consultado") ? "listo" : "sin_documentos";
+    : hay("consultado") ? "listo"
+    : hay("cargado", "revision_admin", "pendiente_clinica", "devuelto") ? "en_proceso" : "sin_documentos";
   db().prepare("UPDATE llaveros SET ultimo_uso = ? WHERE token_hash = ?").run(nowIso(), sha256(token));
   return { saludo: p.nombre.split(" ")[0], estado };
 }
