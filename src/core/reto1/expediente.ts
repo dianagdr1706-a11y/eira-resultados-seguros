@@ -23,10 +23,16 @@ export function pacientePorId(id: string): Paciente {
   return p;
 }
 
+function fechaReal(s: unknown): s is string {
+  if (typeof s !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const t = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(t.getTime()) && t.toISOString().slice(0, 10) === s;
+}
+
 function validar(d: DatosPaciente) {
   const nombre = (d.nombre ?? "").replace(/\s+/g, " ").trim();
   if (nombre.split(" ").length < 2) throw new ErrorDominio("NOMBRE_INVALIDO", "Escribe nombre y al menos un apellido");
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha_nacimiento ?? "") || Number.isNaN(Date.parse(d.fecha_nacimiento)) || new Date(d.fecha_nacimiento) > new Date())
+  if (!fechaReal(d.fecha_nacimiento) || new Date(d.fecha_nacimiento) > new Date())
     throw new ErrorDominio("FECHA_INVALIDA", "La fecha de nacimiento debe ser AAAA-MM-DD y no futura");
   const telefono = d.telefono ? d.telefono.replace(/\D/g, "") : null;
   if (telefono && telefono.length !== 10) throw new ErrorDominio("TELEFONO_INVALIDO", "El teléfono debe tener 10 dígitos");
@@ -123,7 +129,7 @@ export function registrarVisita(
 ): { visita: Visita; servicios: Servicio[] } {
   exigir(ctx, "reto1.registrarVisita");
   const p = pacientePorId(d.pacienteId);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha ?? "")) throw new ErrorDominio("FECHA_INVALIDA", "La fecha de la visita debe ser AAAA-MM-DD");
+  if (!fechaReal(d.fecha)) throw new ErrorDominio("FECHA_INVALIDA", "La fecha de la visita debe ser AAAA-MM-DD");
   if (!d.servicios?.length) throw new ErrorDominio("SIN_SERVICIOS", "Registra al menos un servicio");
   const malos = d.servicios.filter((s) => !(TIPOS_SERVICIO as readonly string[]).includes(s.tipo));
   if (malos.length) throw new ErrorDominio("SERVICIO_INVALIDO", `Servicio no reconocido: ${malos.map((s) => s.tipo).join(", ")}`);
