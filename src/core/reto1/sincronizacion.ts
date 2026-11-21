@@ -78,8 +78,11 @@ export function sincronizarLote(ctx: Ctx, d: { dispositivo: string; operaciones:
       resultados.push({ op_id: op.op_id, estado: "duplicada", resultado_id: previa.resultado_id, detalle: { estado_original: previa.estado } });
       continue;
     }
-    const r = aplicar(ctx, op, temporales, d.dispositivo);
-    guardar(ctx, d.dispositivo, op, r.estado, r.detalle, r.resultado_id ?? null);
+    const r = db().transaction(() => {
+      const x = aplicar(ctx, op, temporales, d.dispositivo);
+      guardar(ctx, d.dispositivo, op, x.estado, x.detalle, x.resultado_id ?? null);
+      return x;
+    })();
     resultados.push({ op_id: op.op_id, ...r });
   }
   const resumen: Record<string, number> = {};
