@@ -80,8 +80,11 @@ export type RutaMalla = { punto: string; avisos: { ref: string; id_eira: string 
 export function rutasMalla(ctx: Ctx, portalUrl: string = PORTAL_URL): RutaMalla[] {
   const pendientes = listarAvisosMalla(ctx, portalUrl).filter((a) => !a.entrega && !a.consultado);
   const porPunto = new Map<string, AvisoMalla[]>();
-  for (const a of pendientes) porPunto.set(a.punto, [...(porPunto.get(a.punto) ?? []), a]);
-  return Array.from(porPunto.entries()).map(([punto, avisos]) => {
+  // Misma comunidad aunque el municipio se haya capturado con otra mayúscula, acento o espacios.
+  const clave = (p: string) => p.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+  for (const a of pendientes) porPunto.set(clave(a.punto), [...(porPunto.get(clave(a.punto)) ?? []), a]);
+  return Array.from(porPunto.values()).map((avisos) => {
+    const punto = avisos[0].punto;
     const mensaje = [
       `EIRA · Ruta: ${punto} · ${avisos.length} aviso${avisos.length === 1 ? "" : "s"}`,
       `Avisa a cada persona: "Tienes un documento disponible. Consulta en ${portalUrl}, acerca tu llavero en el punto EIRA o llama al 341 410 8111."`,
