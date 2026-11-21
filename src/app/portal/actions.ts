@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { db, type Paciente } from "@/lib/db";
 import { kv } from "@/lib/kv";
 import { audit } from "@/lib/audit";
-import { clientIp, createPacSession, destroyPacSession, getPaciente } from "@/lib/auth";
+import { SECURE_COOKIES, clientIp, createPacSession, destroyPacSession, getPaciente } from "@/lib/auth";
 import { hashSecret, randomDigits, randomToken, verifySecret } from "@/lib/ids";
 import { enviarNeutro } from "@/lib/notify";
 
@@ -48,7 +48,7 @@ export async function iniciarAcceso(fd: FormData) {
   await store.del(`otpatt:${p.id}`);
   const t = randomToken(16);
   await store.set(`otpreq:${t}`, p.id, OTP_TTL);
-  cookies().set(OTP_COOKIE, t, { httpOnly: true, sameSite: "lax", path: "/portal", maxAge: OTP_TTL });
+  cookies().set(OTP_COOKIE, t, { httpOnly: true, sameSite: "lax", secure: SECURE_COOKIES, path: "/portal", maxAge: OTP_TTL });
   audit(pacActor(p), `OTP_ENVIADO (${envio.canal})`, null, { destino: envio.destino }, ip);
   redirect(`/portal/verificar?c=${envio.canal}&d=${encodeURIComponent(envio.destino)}`);
 }

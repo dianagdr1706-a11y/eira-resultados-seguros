@@ -9,12 +9,14 @@ export const PAC_COOKIE = "eira_pac";
 export const STAFF_TTL = 8 * 60 * 60;
 export const PAC_TTL = 15 * 60;
 
-const cookieOpts = (maxAge: number) => ({
+export const SECURE_COOKIES = process.env.NODE_ENV === "production" && process.env.INSECURE_COOKIES !== "1";
+
+const cookieOpts = (maxAge?: number) => ({
   httpOnly: true,
   sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production" && process.env.INSECURE_COOKIES !== "1",
+  secure: SECURE_COOKIES,
   path: "/",
-  maxAge,
+  ...(maxAge ? { maxAge } : {}),
 });
 
 export function clientIp() {
@@ -52,7 +54,8 @@ export async function requireStaff(roles?: string[]): Promise<Usuario> {
 export async function createPacSession(pacienteId: string) {
   const t = randomToken();
   await (await kv()).set(`ps:${t}`, pacienteId, PAC_TTL);
-  cookies().set(PAC_COOKIE, t, cookieOpts(PAC_TTL));
+  // Cookie de sesión del navegador; la expiración por inactividad la controla el TTL renovable en el servidor.
+  cookies().set(PAC_COOKIE, t, cookieOpts());
 }
 
 export async function destroyPacSession() {
