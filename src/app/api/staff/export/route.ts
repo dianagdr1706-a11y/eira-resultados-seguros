@@ -14,7 +14,11 @@ export async function GET(req: Request) {
   if (format === "json") {
     return NextResponse.json({ generado: new Date().toISOString(), nota: "Sin nombres ni datos de contacto (minimización)", estudios: rows }, { headers: { "Cache-Control": "no-store" } });
   }
-  const esc = (v: unknown) => (v === null ? "" : `"${String(v).replace(/"/g, '""')}"`);
+  const esc = (v: unknown) => {
+    if (v === null) return "";
+    const s = String(v).replace(/^([=+\-@\t\r])/, "'$1");
+    return `"${s.replace(/"/g, '""')}"`;
+  };
   const csv = [CAMPOS.join(","), ...rows.map((r) => CAMPOS.map((c) => esc(r[c])).join(","))].join("\n");
   return new NextResponse(csv, { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="estudios_eira.csv"', "Cache-Control": "no-store" } });
 }
