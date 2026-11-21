@@ -10,7 +10,7 @@ const ORDEN = ["cargado", "revision_admin", "pendiente_clinica", "devuelto", "no
 
 export default async function Panel({ searchParams }: { searchParams: { estado?: string; error?: string; ok?: string; ciclo?: string } }) {
   const u = await requireStaff();
-  const todos = listarEstudios();
+  const todos = u.rol === "captura" ? [] : listarEstudios();
   const visibles = u.rol === "laboratorio" ? todos.filter((e) => e.estado === "cargado") : todos;
   const filtrados = searchParams.estado
     ? searchParams.estado === "asistida"
