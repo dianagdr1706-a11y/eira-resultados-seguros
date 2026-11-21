@@ -127,3 +127,21 @@ test("malla: el aviso es neutro y opaco, y la entrega por mula se registra una s
   assert.equal(await codigo(() => ml.confirmarEntregaMalla(t.admin, { intentoId: a.intento_id, portador: "Marta Ruiz", app: "briar" })), "YA_ENTREGADO");
   assert.deepEqual(ml.listarAvisosMalla(t.admin).find((x) => x.intento_id === a.intento_id)?.entrega?.portador, "Marta Ruiz");
 });
+
+test("malla: ruta por Briar agrupa los pendientes y el acuse de regreso registra solo las claves recibidas", async () => {
+  const ml = await import("@/core/reto4/malla");
+  const { esNeutro } = await import("@/lib/notify");
+  const pendientes = ml.listarAvisosMalla(t.admin).filter((a) => !a.entrega && !a.consultado);
+  assert.ok(pendientes.length > 0);
+  const rutas = ml.rutasMalla(t.admin);
+  assert.equal(rutas.reduce((n, r) => n + r.avisos.length, 0), pendientes.length);
+  const a = pendientes[0];
+  const ruta = rutas.find((r) => r.avisos.some((x) => x.ref === a.ref))!;
+  assert.ok(esNeutro(ruta.mensaje) && ruta.mensaje.includes(a.ref) && !ruta.mensaje.includes(a.folio), "sin folio de muestra ni términos clínicos");
+  assert.equal(await codigo(() => ml.registrarAcuseMalla(t.admin, { texto: "ya avisé a todas", portador: "Marta Ruiz" })), "SIN_CLAVES");
+  assert.equal(await codigo(() => ml.registrarAcuseMalla(t.medico, { texto: `RECIBIDO ${a.ref}`, portador: "Marta Ruiz" })), "SIN_PERMISO");
+  const r = ml.registrarAcuseMalla(t.admin, { texto: `Hola, recibido ${a.ref.toLowerCase()} y FFFFFFFF`, portador: "Marta Ruiz" });
+  assert.deepEqual(r, { confirmados: [a.ref], ya_registrados: [], desconocidas: ["FFFFFFFF"] });
+  assert.deepEqual(ml.registrarAcuseMalla(t.admin, { texto: `RECIBIDO ${a.ref}`, portador: "Marta Ruiz" }).ya_registrados, [a.ref]);
+  assert.ok(!ml.rutasMalla(t.admin).some((x) => x.avisos.some((y) => y.ref === a.ref)), "lo entregado sale de la ruta");
+});

@@ -70,3 +70,51 @@ export function confirmarEntregaMalla(ctx: Ctx, d: { intentoId: number; portador
   })();
   return { intento_id: i.id, ref: refDe(i.estudio_id) };
 }
+
+export type RutaMalla = { punto: string; avisos: { ref: string; id_eira: string }[]; mensaje: string };
+
+/**
+ * Ruta por Briar: un solo mensaje por punto comunitario con todos los avisos pendientes. Va a la promotora, que
+ * identifica a cada persona por su ID EIRA (el de su talón); no lleva nombres, folios de muestra ni términos clínicos.
+ */
+export function rutasMalla(ctx: Ctx, portalUrl: string = PORTAL_URL): RutaMalla[] {
+  const pendientes = listarAvisosMalla(ctx, portalUrl).filter((a) => !a.entrega && !a.consultado);
+  const porPunto = new Map<string, AvisoMalla[]>();
+  for (const a of pendientes) porPunto.set(a.punto, [...(porPunto.get(a.punto) ?? []), a]);
+  return Array.from(porPunto.entries()).map(([punto, avisos]) => {
+    const mensaje = [
+      `EIRA · Ruta: ${punto} · ${avisos.length} aviso${avisos.length === 1 ? "" : "s"}`,
+      `Avisa a cada persona: "Tienes un documento disponible. Consulta en ${portalUrl}, acerca tu llavero en el punto EIRA o llama al 341 410 8111."`,
+      ...avisos.map((a) => `- ${a.id_eira} · clave ${a.ref}`),
+      "Cuando le avises, responde aquí: RECIBIDO y la clave. Ejemplo: RECIBIDO " + avisos[0].ref,
+    ].join("\n");
+    if (!esNeutro(mensaje)) throw new Error("Ruta con términos clínicos bloqueada");
+    return { punto, avisos: avisos.map((a) => ({ ref: a.ref, id_eira: a.id_eira })), mensaje };
+  });
+}
+
+/**
+ * Acuse de regreso: se pega la respuesta que la promotora escribió en Briar ("RECIBIDO 4CAAF237 ...") y se
+ * registran solo los avisos cuya clave aparece. Las claves desconocidas o ya registradas se reportan, no fallan.
+ */
+export function registrarAcuseMalla(ctx: Ctx, d: { texto: string; portador: string }) {
+  exigir(ctx, "reto4.malla");
+  if (d.portador.trim().length < 3) throw new ErrorDominio("DATOS_INCOMPLETOS", "Escribe el nombre de quien trajo el acuse");
+  const claves = Array.from(new Set(Array.from(d.texto.toUpperCase().matchAll(/RECIBID[OA]S?[\s:,]*((?:[0-9A-F]{8}[\s,;Y]*)+)/g))
+    .flatMap((m) => m[1].match(/[0-9A-F]{8}/g) ?? [])));
+  if (!claves.length) throw new ErrorDominio("SIN_CLAVES", "No se encontró ninguna clave con la palabra RECIBIDO");
+  const avisos = listarAvisosMalla(ctx);
+  const r = { confirmados: [] as string[], ya_registrados: [] as string[], desconocidas: [] as string[] };
+  db().transaction(() => {
+    for (const c of claves) {
+      const a = avisos.find((x) => x.ref === c);
+      if (!a) r.desconocidas.push(c);
+      else if (a.entrega) r.ya_registrados.push(c);
+      else {
+        confirmarEntregaMalla(ctx, { intentoId: a.intento_id, portador: d.portador, app: "briar" });
+        r.confirmados.push(c);
+      }
+    }
+  })();
+  return r;
+}

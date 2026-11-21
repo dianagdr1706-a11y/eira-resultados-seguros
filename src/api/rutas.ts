@@ -103,6 +103,8 @@ export const RUTAS: Ruta[] = [
   } },
   { metodo: "POST", ruta: "/reto4/contacto/ciclo", acceso: "personal", desc: "Ejecuta el ciclo: escala al siguiente medio tras 72 h sin consulta", fn: (p) => ok(contacto.ejecutarCicloContacto(c(p))) },
   { metodo: "GET", ruta: "/reto4/malla", acceso: "personal", desc: "Cola de avisos neutros para llevar por malla (Briar/Bridgefy/Nearby)", fn: (p) => ok(malla.listarAvisosMalla(c(p))) },
+  { metodo: "GET", ruta: "/reto4/malla/rutas", acceso: "personal", desc: "Rutas por Briar: un mensaje por punto comunitario con sus avisos pendientes", fn: (p) => ok(malla.rutasMalla(c(p))) },
+  { metodo: "POST", ruta: "/reto4/malla/acuse", acceso: "personal", desc: "Acuse de regreso {texto, portador}: registra los avisos cuya clave viene tras RECIBIDO", fn: (p) => ok(malla.registrarAcuseMalla(c(p), { texto: String(p.body.texto ?? ""), portador: String(p.body.portador ?? "") })) },
   { metodo: "POST", ruta: "/reto4/malla/:id/entrega", acceso: "personal", desc: "La mula confirma la entrega {portador, app}", fn: (p) => ok(malla.confirmarEntregaMalla(c(p), { intentoId: Number(p.params.id), portador: String(p.body.portador ?? ""), app: String(p.body.app ?? "") })) },
   { metodo: "GET", ruta: "/reto4/estudios/:id/contacto", acceso: "personal", desc: "Intentos de contacto de un estudio", fn: (p) => { r4.obtenerEstudio(c(p), p.params.id); return ok(contacto.intentosDe(p.params.id)); } },
 
